@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Пошаговые игры</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            padding: 2rem;
+            background-color: #fff;
+            color: #000;
+        }
+
+        main.container {
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h2, h3 {
+            color: #333;
+            text-align: center;
+        }
+
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .game-tile {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            transition: transform 0.3s;
+            text-align: center;
+        }
+
+        .game-tile img {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 1rem;
+            object-fit: cover;
+        }
+
+        .game-tile:hover {
+            transform: scale(1.05);
+        }
+
+        nav ul {
+            background-color: #f1f1f1;
+            justify-content: center;
+        }
+
+        nav ul li {
+            list-style: none;
+            margin: 0.5rem;
+        }
+
+        footer {
+            background-color: #f1f1f1;
+            text-align: center;
+        }
+
+        .welcome-image {
+            width: 100%;
+            max-width: 600px;
+            height: auto;
+            object-fit: contain;
+            margin: 1rem auto;
+        }
+
+        footer {
+            background-color: #f1f1f1;
+            padding: 1rem;
+            text-align: center;
+            border-top: 1px solid #ccc;
+        }
+
+        footer a {
+            text-decoration: none;
+            color: #007bff;
+            margin: 0 0.5rem;
+            font-weight: bold;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <!--
+    <nav class="container-fluid">
+        <ul>
+            <li><strong>Пошаговые игры</strong></li>
+        </ul>
+        <ul>
+            <li><a href="#home">Главная</a></li>
+            <li><a href="#games">Игры</a></li>
+            <li><a href="#contact">Контакты</a></li>
+        </ul>
+    </nav>
+    -->
+
+    <main class="container">
+        <div class="grid">
+            <section>
+                <hgroup>
+                    <h2>Популярные игры</h2>
+                    <h3>Выбирайте игру и играйте с другими игроками</h3>
+                </hgroup>
+                <div class="game-grid">
+                    <div class="game-tile">
+                        <img src="row-2-column-1.webp" alt="Крестики-нолики" />
+                        <figcaption><a href="https://unsplash.com" target="_blank">Крестики-нолики</a></figcaption>
+                    </div>
+                    <!--
+                    <div class="game-tile">
+                        <img src="https://files.oaiusercontent.com/file-eqPP44phZjFuyGPDnkqrsD0B?se=2024-05-19T21%3A24%3A55Z&sp=r&sv=2023-11-03&sr=b&rscc=max-age%3D31536000%2C%20immutable&rscd=attachment%3B%20filename%3Da1900fde-0ef4-48e1-973f-bca0c3e39e5e.webp&sig=QdmG4F5P9tYjbeQ440LOkcyOD3w3Cc3e3jWJpi3o0xo%3D" alt="Морской бой" />
+                        <figcaption><a href="https://unsplash.com" target="_blank">Морской бой</a></figcaption>
+                    </div>
+                    <div class="game-tile">
+                        <img src="https://files.oaiusercontent.com/file-NWrrQffShMptv70UmMiszyBK?se=2024-05-19T21%3A24%3A55Z&sp=r&sv=2023-11-03&sr=b&rscc=max-age%3D31536000%2C%20immutable&rscd=attachment%3B%20filename%3D86ac74e6-242f-4526-be3a-d7d3cf805898.webp&sig=Re3WdZLG8bdC/D3HATVQtH/0cT05YOGJhpmO3WfOiN8%3D" alt="Шахматы" />
+                        <figcaption><a href="https://unsplash.com" target="_blank">Шахматы</a></figcaption>
+                    </div>
+
+                    <div class="game-tile">
+                        <img src="https://files.oaiusercontent.com/file-ROFxqRXKe1olx4ToWpNTDBkS?se=2024-05-19T21%3A24%3A55Z&sp=r&sv=2023-11-03&sr=b&rscc=max-age%3D31536000%2C%20immutable&rscd=attachment%3B%20filename%3D7ace67a8-f33e-4d97-bef9-ef9972ff2d99.webp&sig=CtuE8GZNsDU0ubBjgW3LtkgML6r96EhbJy00ZlaNDyk%3D" alt="Сапёр" />
+                        <figcaption><a href="https://unsplash.com" target="_blank">Сапёр</a></figcaption>
+                    </div>
+                    -->
+                </div>
+            </section>
+        </div>
+
+        <div class="grid">
+            <section>
+                <hgroup>
+                    <h2>Добро пожаловать на сайт пошаговых игр!</h2>
+                    <h3>Играйте в разнообразные игры с другими игроками</h3>
+                </hgroup>
+                <p>Наш сайт предлагает вам разнообразие пошаговых игр, которые вы можете играть с другими игроками. Начните с выбора одной из доступных игр выше.</p>
+                <figure>
+                    <img class="welcome-image" src="img01.webp" alt="Игровое изображение" />
+                </figure>
+            </section>
+        </div>
+    </main>
+
+    <!--
+    <footer class="container">
+        <small><a href="#home">Главная</a> • <a href="#contact">Контакты</a></small>
+    </footer>
+    -->
+</body>
+
+</html>
