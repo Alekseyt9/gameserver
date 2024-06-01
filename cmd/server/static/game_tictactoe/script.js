@@ -1,3 +1,5 @@
+
+/*
 var ws = new WebSocket("ws://localhost:3000/ws");
 ws.onopen = function() {
     ws.send("Hello, server!")
@@ -10,31 +12,45 @@ ws.onmessage = function(event) {
 ws.onclose = function() {
     console.log("Connection closed")
 }
+*/
 
-const svgElement = document.getElementById('board');
-const count = 15;
-const size = 600/count;
-let move = false;
+    resizeBoard();
 
-svgElement.addEventListener('click', (e) => {
-    const rect = svgElement.getBoundingClientRect();
-    const px = e.clientX - rect.left;
-    const py = e.clientY - rect.top;
+    const svgElement = document.getElementById('board');
+    const count = 15;
 
-    const x = Math.floor(px/size) * size + size/2;
-    const y = Math.floor(py/size) * size + size/2;
+    //let docHeight = document.documentElement.scrollHeight;
+    //let docWidth = document.documentElement.scrollWidth;
+
+    let board = document.getElementById('board');
+    let height = board.scrollHeight;
+    let width = board.scrollWidth;
+
+    let minSize = Math.min(height, width);
+    let size = minSize/count;
+    let move = false;
+
+    svgElement.addEventListener('click', (e) => {
+        const rect = svgElement.getBoundingClientRect();
+        const px = e.clientX - rect.left;
+        const py = e.clientY - rect.top;
+
+        const x = Math.floor(px/size) * size + size/2;
+        const y = Math.floor(py/size) * size + size/2;
 
 
-    move = !move;
-    //textElement.setAttribute('fill', move ? "#0F2D70" : "#B33B1D");
-    if (move) {
-        drawCross(x, y, size);
-    } else {
-        drawCircle(x, y, size);
-    }
+        move = !move;
+        //textElement.setAttribute('fill', move ? "#0F2D70" : "#B33B1D");
+        if (move) {
+            drawCross(x, y, size);
+        } else {
+            drawCircle(x, y, size);
+        }
 
-    svgElement.appendChild(textElement);
-});
+        svgElement.appendChild(textElement);
+    });
+
+    drawBoard(count, size);
 
 function drawCross(x, y, size) {
     const halfSize = size / 3.5; // половина длины крестика
@@ -55,8 +71,6 @@ function drawCircle(x, y, size) {
     svgElement.appendChild(circle);
 }
 
-drawBoard(count, size);
-
 function drawLine(x1, y1, x2, y2, color, sw = '1') {
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
     line.setAttribute('x1', x1);
@@ -70,10 +84,21 @@ function drawLine(x1, y1, x2, y2, color, sw = '1') {
 }
 
 function drawBoard(count, size){
-    for (let i = 0; i < count-1; i++) {
-        for (let j = 0; j < count-1; j++) {
-            drawLine((i+1)*size, 0, (i+1)*size, count*size, '#696969');
-            drawLine(0, (j+1)*size, count*size, (j+1)*size, '#696969');
+    for (let i = 0; i < count+1; i++) {
+        for (let j = 0; j < count+1; j++) {
+            drawLine(i*size, 0, i*size, count*size, '#696969');
+            drawLine(0, j*size, count*size, j*size, '#696969');
         }
     }
+}
+
+function resizeBoard() {
+	const container = document.getElementById('canvas-container');
+	const board = document.getElementById('board');
+	const containerWidth = container.clientWidth;
+	const containerHeight = container.clientHeight;
+	const size = Math.min(containerWidth, containerHeight);
+
+	board.setAttribute('width', size);
+	board.setAttribute('height', size);
 }
