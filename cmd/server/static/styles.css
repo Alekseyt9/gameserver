@@ -113,8 +113,8 @@ body.modal-open {
 
 .modal-content {
     position: relative;
-    width: 80%;
-    height: 80%;
+    width: 95%;
+    height: 95%;
     background: white;
     border: 2px solid #ccc;
 }
@@ -126,8 +126,8 @@ body.modal-open {
 
 .close-btn {
     position: absolute;
-    top: calc(10% - 20px); /* 10% сверху (высота модального окна) минус высота крестика */
-    right: calc(10% - 1cm); /* 10% от ширины (от края модального окна) минус 1 см */
+    top: calc(2.5% - 20px); 
+    right: calc(2.5% - 1cm);
     font-size: 30px;
     cursor: pointer;
     width: 30px;

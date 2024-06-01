@@ -12,7 +12,7 @@ ws.onclose = function() {
 }
 
 const svgElement = document.getElementById('board');
-const count = 20;
+const count = 15;
 const size = 600/count;
 let move = false;
 
