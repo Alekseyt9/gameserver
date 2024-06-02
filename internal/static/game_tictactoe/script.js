@@ -1,26 +1,9 @@
 
-/*
-var ws = new WebSocket("ws://localhost:3000/ws");
-ws.onopen = function() {
-    ws.send("Hello, server!")
-}
-
-ws.onmessage = function(event) {
-    console.log("Received: " + event.data);
-}
-
-ws.onclose = function() {
-    console.log("Connection closed")
-}
-*/
 
     resizeBoard();
 
     const svgElement = document.getElementById('board');
     const count = 15;
-
-    //let docHeight = document.documentElement.scrollHeight;
-    //let docWidth = document.documentElement.scrollWidth;
 
     let board = document.getElementById('board');
     let height = board.scrollHeight;
@@ -52,8 +35,9 @@ ws.onclose = function() {
 
     drawBoard(count, size);
 
+
 function drawCross(x, y, size) {
-    const halfSize = size / 3.5; // половина длины крестика
+    const halfSize = size / 3.5; 
 
     drawLine(x - halfSize, y - halfSize, x + halfSize, y + halfSize, "#B33B1D", '3');
     drawLine(x + halfSize, y - halfSize, x - halfSize, y + halfSize, "#B33B1D", '3');
@@ -63,7 +47,7 @@ function drawCircle(x, y, size) {
     const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     circle.setAttribute('cx', x);
     circle.setAttribute('cy', y);
-    circle.setAttribute('r', size / 3.5); // радиус кружка
+    circle.setAttribute('r', size / 3.5); 
     circle.setAttribute('stroke', "#0F2D70");
     circle.setAttribute('stroke-width', '3');
     circle.setAttribute('fill', 'none');

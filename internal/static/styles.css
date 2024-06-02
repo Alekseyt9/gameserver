@@ -89,9 +89,6 @@ footer a:hover {
     text-decoration: underline;
 }
 
-
-
-
 /* modal window */
 
 body.modal-open {
@@ -129,9 +126,12 @@ body.modal-open {
     top: calc(2.5% - 20px); 
     right: calc(2.5% - 10px);
     font-size: 40px;
+    font-style: oblique;
     cursor: pointer;
     width: 40px;
     height: 40px;
     background-size: contain;
     z-index: 1010;
+    /*background-color: gray;*/
+    color: gray
 }

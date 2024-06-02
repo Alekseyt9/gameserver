@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Пошаговые игры</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="static/styles.css">
 </head>
 
 <body>
@@ -20,7 +20,7 @@
                 </hgroup>
                 <div class="game-grid">
                     <div class="game-tile">
-                        <img src="row-2-column-1.webp" alt="Крестики-нолики" />
+                        <img src="static/row-2-column-1.webp" alt="Крестики-нолики" />
                         <figcaption><a target="_blank">Крестики-нолики</a></figcaption>
                     </div>
                 </div>
@@ -42,13 +42,16 @@
                 </hgroup>
                 <p>Наш сайт предлагает вам разнообразие пошаговых игр, которые вы можете играть с другими игроками. Начните с выбора одной из доступных игр выше.</p>
                 <figure>
-                    <img class="welcome-image" src="img01.webp" alt="Игровое изображение" />
+                    <img class="welcome-image" src="static/img01.webp" alt="Игровое изображение" />
                 </figure>
             </section>
         </div>
     </main>
 
-    <script src="script.js"></script>
+    <!-- Скрытый элемент для WebSocket URL -->
+    <div id="ws-url" style="display: none;">{{.WebSocketURL}}</div>
+
+    <script src="static/script.js"></script>
 
 </body>
 
