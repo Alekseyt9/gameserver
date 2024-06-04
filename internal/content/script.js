@@ -1,8 +1,8 @@
 document.querySelector('.game-tile').addEventListener('click', function() {
     document.getElementById('modal').style.display = 'flex';
     document.body.classList.add('modal-open');
-    //document.getElementById('game-iframe').src = 'static/matching/index.html';
-    document.getElementById('game-iframe').src = 'static/game_tictactoe/index.html';
+    //document.getElementById('game-iframe').src = 'content/matching/index.html';
+    document.getElementById('game-iframe').src = 'content/games/tictactoe/index.html';
 });
 
 document.getElementById('close-btn').addEventListener('click', function() {

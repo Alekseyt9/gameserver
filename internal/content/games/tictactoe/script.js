@@ -39,8 +39,8 @@
 function drawCross(x, y, size) {
     const halfSize = size / 3.5; 
 
-    drawLine(x - halfSize, y - halfSize, x + halfSize, y + halfSize, "#B33B1D", '3');
-    drawLine(x + halfSize, y - halfSize, x - halfSize, y + halfSize, "#B33B1D", '3');
+    drawLine(x - halfSize, y - halfSize, x + halfSize, y + halfSize, "#B33B1D", '6');
+    drawLine(x + halfSize, y - halfSize, x - halfSize, y + halfSize, "#B33B1D", '6');
 }
 
 function drawCircle(x, y, size) {
@@ -49,7 +49,7 @@ function drawCircle(x, y, size) {
     circle.setAttribute('cy', y);
     circle.setAttribute('r', size / 3.5); 
     circle.setAttribute('stroke', "#0F2D70");
-    circle.setAttribute('stroke-width', '3');
+    circle.setAttribute('stroke-width', '6');
     circle.setAttribute('fill', 'none');
 
     svgElement.appendChild(circle);

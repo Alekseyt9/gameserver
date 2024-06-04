@@ -7,12 +7,12 @@ import (
 	"text/template"
 )
 
-func main() {
-	fileServer()
-}
-
 type PageData struct {
 	WebSocketURL string
+}
+
+func main() {
+	fileServer()
 }
 
 func fileServer() {
