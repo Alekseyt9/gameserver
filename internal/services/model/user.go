@@ -2,7 +2,7 @@ package model
 
 import "github.com/beevik/guid"
 
-type User struct {
+type Player struct {
 	ID   guid.Guid
 	Name string
 }
