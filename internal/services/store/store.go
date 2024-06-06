@@ -7,13 +7,13 @@ import (
 )
 
 type Store interface {
-	GetUser(id guid.Guid) *model.Player
-	CreateUser(*model.Player)
+	GetUser(id guid.Guid) (*model.Player, error)
+	CreateUser(*model.Player) error
 
 	//GetRoomState(id guid.Guid) string
-	GetRoomState(playerID guid.Guid, gameType string) string
-	SetRoomState(id guid.Guid, state string)
+	GetRoomState(playerID guid.Guid, gameType string) (string, error)
+	SetRoomState(id guid.Guid, state string) error
 
-	CreateRoom()
-	DropRoom(id guid.Guid)
+	CreateRoom() error
+	DropRoom(id guid.Guid) error
 }

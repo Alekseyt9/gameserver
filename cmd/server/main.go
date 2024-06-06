@@ -16,9 +16,9 @@ func main() {
 }
 
 func fileServer() {
-	staticDir := filepath.Join("..", "..", "internal", "static")
-	fs := http.FileServer(http.Dir(staticDir))
-	http.Handle("/static/", http.StripPrefix("/static/", fs))
+	contentDir := filepath.Join("..", "..", "internal", "content")
+	fs := http.FileServer(http.Dir(contentDir))
+	http.Handle("/content/", http.StripPrefix("/content/", fs))
 
 	// шаблон для передачи адреса WebSocket соединени
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -26,7 +26,7 @@ func fileServer() {
 			http.NotFound(w, r)
 			return
 		}
-		tmplPath := filepath.Join(staticDir, "index.html")
+		tmplPath := filepath.Join(contentDir, "index.html")
 		tmpl := template.Must(template.ParseFiles(tmplPath))
 
 		data := PageData{

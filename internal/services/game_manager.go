@@ -32,7 +32,11 @@ func (g *GameManager) Process(msg *model.ClientMsg) error {
 		return errors.New("wrong MessageType")
 	}
 
-	state := g.store.GetRoomState(msg.PlayerID, msg.GameType)
+	state, err := g.store.GetRoomState(msg.PlayerID, msg.GameType)
+	if err != nil {
+		return err
+	}
+
 	proc, err := g.getProcessor(msg.GameType)
 	if err != nil {
 		return err

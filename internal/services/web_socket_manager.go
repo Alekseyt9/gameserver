@@ -1,30 +1,31 @@
 package services
 
 import (
-	"net/http"
-
+	"github.com/gin-gonic/gin"
 	"github.com/olahol/melody"
 )
 
 type WebSocketManager struct {
 }
 
-func (*WebSocketManager) Create(url string) {
+func CreateWSManager(url string) {
+	router := gin.Default()
 	m := melody.New()
 
-	/*
-		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-			http.ServeFile(w, r, "index.html")
-		})
-	*/
-
-	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		m.HandleRequest(w, r)
+	router.GET("/ws", func(c *gin.Context) {
+		m.HandleRequest(c.Writer, c.Request)
 	})
 
-	m.HandleMessage(func(s *melody.Session, msg []byte) {
-		//m.Broadcast(msg)
+	m.HandleConnect(func(s *melody.Session) {
+
+		/*
+			go func() {
+			  for msg := range ch {
+				s.Write([]byte(msg))
+			  }
+			}()
+		*/
 	})
 
-	http.ListenAndServe(":5000", nil)
+	router.Run(url)
 }

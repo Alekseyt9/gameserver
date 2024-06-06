@@ -1,19 +1,17 @@
 package services
 
-import "gameserver/internal/services/model"
-
-const UserMsgType = "register"
+import (
+	"gameserver/internal/services/model"
+	"gameserver/internal/services/store"
+)
 
 type PlayerManager struct {
-}
-
-func (g *PlayerManager) Process(msg *model.ClientMsg) error {
-	return nil
+	store store.Store
 }
 
 /*
 Создает нового пользователя (анонимного)
 */
-func (*PlayerManager) createUser() *model.Player {
+func (*PlayerManager) CreateUser() *model.Player {
 	return nil
 }
