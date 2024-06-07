@@ -10,7 +10,6 @@ type Store interface {
 	GetUser(id guid.Guid) (*model.Player, error)
 	CreateUser(*model.Player) error
 
-	//GetRoomState(id guid.Guid) string
 	GetRoomState(playerID guid.Guid, gameType string) (string, error)
 	SetRoomState(id guid.Guid, state string) error
 
