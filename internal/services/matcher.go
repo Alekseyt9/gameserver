@@ -6,8 +6,6 @@ import (
 	"gameserver/internal/services/store"
 	"sync"
 	"time"
-
-	"github.com/beevik/guid"
 )
 
 type Matcher struct {
@@ -26,12 +24,6 @@ type MatcherQueue struct {
 	lock sync.RWMutex
 }
 
-// запрос игрока на комнату
-type RoomQuery struct {
-	PlayerID guid.Guid
-	GameID   string
-}
-
 func New() *Matcher {
 	m := &Matcher{
 		queue: &MatcherQueue{
@@ -48,6 +40,22 @@ func New() *Matcher {
 	}()
 
 	return m
+}
+
+// добавляет запрос на комнату, только если такого еще нет
+func (m *Matcher) CheckAndAdd(q model.RoomQuery) bool {
+	m.queue.lock.Lock()
+	defer m.queue.lock.Unlock()
+
+	for e := m.queue.list.Front(); e != nil; e = e.Next() {
+		if e.Value.(model.RoomQuery) == q {
+			return false
+		}
+	}
+
+	m.queue.list.PushBack(q)
+
+	return true
 }
 
 func (m *Matcher) doMatching() error {
@@ -87,9 +95,7 @@ func (m *Matcher) doMatching() error {
 	rooms := make([]model.MatcherRoom, 0)
 
 	for _, v := range m.rooms {
-		for _, r := range v.rooms {
-			rooms = append(rooms, r)
-		}
+		rooms = append(rooms, v.rooms...)
 	}
 
 	err := m.store.CreateOrUpdateRooms(rooms)
@@ -115,32 +121,16 @@ func (m *Matcher) doMatching() error {
 	return nil
 }
 
-// добавляет запрос на комнату, только если такого еще нет
-func (m *Matcher) CheckAndAdd(q RoomQuery) bool {
-	m.queue.lock.Lock()
-	defer m.queue.lock.Unlock()
-
-	for e := m.queue.list.Front(); e != nil; e = e.Next() {
-		if e.Value.(RoomQuery) == q {
-			return false
-		}
-	}
-
-	m.queue.list.PushBack(q)
-
-	return true
-}
-
 // перемещаем из очереди все элементы в слайс, чтобы не блокировать очередь надолго, очередь очищается
-func (m *Matcher) queueToSlice() []RoomQuery {
+func (m *Matcher) queueToSlice() []model.RoomQuery {
 	m.queue.lock.Lock()
 	defer m.queue.lock.Unlock()
-	s := make([]RoomQuery, m.queue.list.Len())
+	s := make([]model.RoomQuery, m.queue.list.Len())
 	l := m.queue.list
 
 	for e := l.Front(); e != nil; {
 		next := e.Next()
-		s = append(s, e.Value.(RoomQuery))
+		s = append(s, e.Value.(model.RoomQuery))
 		l.Remove(e)
 		e = next
 	}
