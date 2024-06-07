@@ -6,8 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func ConnectRoom(c *gin.Context) {
-
+func (h *Handler) ConnectRoom(c *gin.Context) {
 	// TODO вынести в middleware
 	playerID, err := c.Cookie("playerID")
 	if err != nil {
@@ -24,7 +23,7 @@ func ConnectRoom(c *gin.Context) {
 	})
 }
 
-func QuitRoom(c *gin.Context) {
+func (h *Handler) QuitRoom(c *gin.Context) {
 	// TODO вынести в middleware
 	playerID, err := c.Cookie("playerID")
 	if err != nil {

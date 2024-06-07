@@ -6,6 +6,7 @@ import (
 	"text/template"
 
 	"gameserver/internal/services/handlers"
+	"gameserver/internal/services/store"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,14 +15,30 @@ type PageData struct {
 	WebSocketURL string
 }
 
-func main() {
-	r := gin.Default()
-	fileServer(r)
-	regHandlers(r)
+type Config struct {
+	ConnectionString string
 }
 
-func regHandlers(r *gin.Engine) {
-	r.POST("/api/player/register", handlers.RegisterPlayer)
+func main() {
+	r := gin.Default()
+
+	cfg := &Config{}
+
+	fileServer(r)
+	regHandlers(r, cfg)
+}
+
+func regHandlers(r *gin.Engine, cfg *Config) {
+
+	store, err := store.NewDBStore(cfg.ConnectionString)
+	if err != nil {
+		// TODO log
+	}
+
+	h := handlers.New(store)
+	r.POST("/api/player/register", h.RegisterPlayer)
+	r.POST("/api/room/connect", h.ConnectRoom)
+	r.POST("/api/room/quit", h.QuitRoom)
 }
 
 func fileServer(r *gin.Engine) {
