@@ -23,8 +23,8 @@ type RoomInfo struct {
 }
 
 type RoomInteractor struct {
-	RecieveChan chan RecieveRoomMsg // канал для обработки входящих через websocket сообщений одним воркером комнаты
-	SendChan    chan SendRooomMsg   // канал для рассылки сообщений игрокам комнаты через werbsocket
+	RecieveChan chan model.ClientMsg // канал для обработки входящих через websocket сообщений одним воркером комнаты
+	SendChan    chan SendRooomMsg    // канал для рассылки сообщений игрокам комнаты через werbsocket
 }
 
 type RecieveRoomMsg struct {
@@ -40,14 +40,14 @@ func (r *RoomManager) GetRoomInteractor(roomID guid.Guid) *RoomInteractor {
 	if !ok {
 
 		x = &RoomInteractor{
-			RecieveChan: make(chan RecieveRoomMsg),
+			RecieveChan: make(chan model.ClientMsg),
 			SendChan:    make(chan SendRooomMsg),
 		}
 
 		// создаем воркер для комнаты
 		go func() {
 			for m := range x.RecieveChan {
-				r.gameManager.Process(m)
+				r.gameManager.Process(&m)
 			}
 		}()
 
