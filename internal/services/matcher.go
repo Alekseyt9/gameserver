@@ -2,6 +2,8 @@ package services
 
 import (
 	"container/list"
+	"gameserver/internal/services/model"
+	"gameserver/internal/services/store"
 	"sync"
 	"time"
 
@@ -11,20 +13,12 @@ import (
 type Matcher struct {
 	queue *MatcherQueue             // очередь игроков, кому нужна комната
 	rooms map[string]*GameRoomGroup // комнаты, сгруппированные по играм
-}
-
-type MatcherRoom struct {
-	players []MatcherPlayer
-}
-
-type MatcherPlayer struct {
-	playerId guid.Guid
+	store store.Store
 }
 
 type GameRoomGroup struct {
 	playersCount int
-	gameID       string
-	rooms        []MatcherRoom
+	rooms        []model.MatcherRoom
 }
 
 type MatcherQueue struct {
@@ -49,20 +43,68 @@ func New() *Matcher {
 	go func() {
 		for {
 			m.doMatching()
-			time.Sleep(time.Microsecond * 100)
+			time.Sleep(time.Microsecond * 500)
 		}
 	}()
 
 	return m
 }
 
-func (m *Matcher) doMatching() {
-	if m.queue.list.Len() == 0 {
-		return
+func (m *Matcher) doMatching() error {
+	s := m.queueToSlice()
+
+	for _, l := range s {
+		rg := m.rooms[l.GameID]
+
+		// получаем первую комнату, которая не заполнена
+		var wr *model.MatcherRoom
+		for _, r := range rg.rooms {
+			if len(r.Players) < rg.playersCount {
+				wr = &r
+				break
+			}
+		}
+
+		if wr == nil { // создаем новую комнату
+			wr = &model.MatcherRoom{Players: make([]model.MatcherPlayer, rg.playersCount)}
+			rg.rooms = append(rg.rooms, *wr)
+		}
+
+		wr.Players = append(wr.Players, model.MatcherPlayer{
+			PlayerId: l.PlayerID,
+			IsNew:    true,
+		})
 	}
 
-	// берем последовательно игроков и добавляем в комнаты, если есть
-	// комнаты сгруппированы по типу игры (в мапе)
+	// сохраняем все изменения
+	rooms := make([]model.MatcherRoom, 0)
+
+	for _, v := range m.rooms {
+		for _, r := range v.rooms {
+			rooms = append(rooms, r)
+		}
+	}
+
+	err := m.store.CreateOrUpdateRooms(rooms)
+	if err != nil {
+		return nil
+	}
+
+	// удаляем заполненные комнаты, сбрасываем состояние игроков
+	for g, v := range m.rooms {
+		rs := make([]model.MatcherRoom, 0)
+		for _, r := range v.rooms { // создаем список комнат в ожидании и оставляем только их
+			if len(r.Players) < v.playersCount {
+				rs = append(rs, r)
+				for _, p := range r.Players { // так как уже в базе - то не новые
+					p.IsNew = false
+				}
+			}
+		}
+		m.rooms[g].rooms = rs
+	}
+
+	return nil
 }
 
 // добавляет запрос на комнату, только если такого еще нет
@@ -79,4 +121,21 @@ func (m *Matcher) CheckAndAdd(q RoomQuery) bool {
 	m.queue.list.PushBack(q)
 
 	return true
+}
+
+// из очереди все элементы в слайс, чтобы не блокировать очередь надолго
+func (m *Matcher) queueToSlice() []RoomQuery {
+	m.queue.lock.Lock()
+	defer m.queue.lock.Unlock()
+	s := make([]RoomQuery, m.queue.list.Len())
+	l := m.queue.list
+
+	for e := l.Front(); e != nil; {
+		next := e.Next()
+		s = append(s, e.Value.(RoomQuery))
+		l.Remove(e)
+		e = next
+	}
+
+	return s
 }

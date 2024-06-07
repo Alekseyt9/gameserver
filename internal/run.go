@@ -26,7 +26,6 @@ func Run(cfg *Config) {
 }
 
 func regHandlers(r *gin.Engine, cfg *Config) {
-
 	store, err := store.NewDBStore(cfg.ConnectionString)
 	if err != nil {
 		// TODO log

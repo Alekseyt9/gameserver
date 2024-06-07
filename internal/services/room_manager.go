@@ -38,7 +38,6 @@ func (r *RoomManager) GetRoomInteractor(roomID guid.Guid) *RoomInteractor {
 	defer r.interactors.lock.Unlock()
 	x, ok := r.interactors.data[roomID]
 	if !ok {
-
 		x = &RoomInteractor{
 			RecieveChan: make(chan model.ClientMsg),
 			SendChan:    make(chan SendRooomMsg),

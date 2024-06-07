@@ -57,6 +57,10 @@ func (db *DBStore) DropRoom(id guid.Guid) error {
 	return errors.New("not implemented")
 }
 
+func (db *DBStore) CreateOrUpdateRooms([]model.MatcherRoom) error {
+	return errors.New("not implemented")
+}
+
 func bootstrap(connString string) error {
 	mPath := getMigrationPath()
 	m, err := migrate.New(mPath, connString)
