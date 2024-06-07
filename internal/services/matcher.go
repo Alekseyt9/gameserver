@@ -66,7 +66,11 @@ func (m *Matcher) doMatching() error {
 		}
 
 		if wr == nil { // создаем новую комнату
-			wr = &model.MatcherRoom{Players: make([]model.MatcherPlayer, rg.playersCount)}
+			wr = &model.MatcherRoom{
+				Players: make([]model.MatcherPlayer, rg.playersCount),
+				IsNew:   true,
+				Status:  "wait",
+			}
 			rg.rooms = append(rg.rooms, *wr)
 		}
 
@@ -74,6 +78,9 @@ func (m *Matcher) doMatching() error {
 			PlayerId: l.PlayerID,
 			IsNew:    true,
 		})
+		if len(wr.Players) == rg.playersCount {
+			wr.Status = "game"
+		}
 	}
 
 	// сохраняем все изменения
@@ -95,6 +102,7 @@ func (m *Matcher) doMatching() error {
 		rs := make([]model.MatcherRoom, 0)
 		for _, r := range v.rooms { // создаем список комнат в ожидании и оставляем только их
 			if len(r.Players) < v.playersCount {
+				r.IsNew = false
 				rs = append(rs, r)
 				for _, p := range r.Players { // так как уже в базе - то не новые
 					p.IsNew = false
@@ -123,7 +131,7 @@ func (m *Matcher) CheckAndAdd(q RoomQuery) bool {
 	return true
 }
 
-// из очереди все элементы в слайс, чтобы не блокировать очередь надолго
+// перемещаем из очереди все элементы в слайс, чтобы не блокировать очередь надолго, очередь очищается
 func (m *Matcher) queueToSlice() []RoomQuery {
 	m.queue.lock.Lock()
 	defer m.queue.lock.Unlock()
