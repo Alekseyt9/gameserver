@@ -6,6 +6,7 @@ type MatcherRoom struct {
 	IsNew   bool   // новая комната
 	Status  string // wait/game
 	Players []MatcherPlayer
+	GameID  string
 }
 
 type MatcherPlayer struct {

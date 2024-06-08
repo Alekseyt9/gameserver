@@ -15,5 +15,7 @@ type Store interface {
 
 	CreateRoom() error
 	DropRoom(id guid.Guid) error
+
 	CreateOrUpdateRooms([]model.MatcherRoom) error
+	LoadWaitingRooms() ([]model.MatcherRoom, error)
 }

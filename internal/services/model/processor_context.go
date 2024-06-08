@@ -8,14 +8,14 @@ type GameProcessorCtx struct {
 }
 
 type SendMessage struct {
-	message  string
 	playerID guid.Guid
+	message  string
 }
 
 func (c *GameProcessorCtx) SaveState(s string) {
 
 }
 
-func (c *GameProcessorCtx) SendMessages() {
+func (c *GameProcessorCtx) SendMessages(msgs []SendMessage) {
 
 }

@@ -18,6 +18,6 @@ type GameMsg struct {
 }
 
 type GameProcessor interface {
-	Process(ctx *GameProcessorCtx, state string, msg GameMsg) error
+	Process(ctx *GameProcessorCtx, state string, msg *GameMsg) error
 	GetInfo() *GameInfo
 }
