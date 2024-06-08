@@ -8,7 +8,7 @@ import (
 )
 
 type GameManager struct {
-	procs map[string]GameProcessor
+	procs map[string]model.GameProcessor
 	store store.Store
 }
 
@@ -16,7 +16,7 @@ const GameMsgType = "game"
 
 func CreareGameManager(store store.Store) *GameManager {
 	man := &GameManager{
-		procs: make(map[string]GameProcessor),
+		procs: make(map[string]model.GameProcessor),
 		store: store,
 	}
 	man.procs["tictactoe"] = &game.TTCProcessor{}
@@ -24,7 +24,7 @@ func CreareGameManager(store store.Store) *GameManager {
 	return man
 }
 
-func (g *GameManager) Process(msg *model.ClientMsg) error {
+func (g *GameManager) Process(msg *model.GameMsg) error {
 	// поднимает state для пользователя+тип игры
 	// передает в обработчик
 
@@ -43,12 +43,12 @@ func (g *GameManager) Process(msg *model.ClientMsg) error {
 	}
 
 	procCtx := &model.GameProcessorCtx{}
-	proc.Process(procCtx, state, msg.Data)
+	proc.Process(procCtx, state, msg)
 
 	return nil
 }
 
-func (g *GameManager) getProcessor(gameType string) (GameProcessor, error) {
+func (g *GameManager) getProcessor(gameType string) (model.GameProcessor, error) {
 	v, ok := g.procs[gameType]
 	if !ok {
 		return nil, errors.New("wrong processr")

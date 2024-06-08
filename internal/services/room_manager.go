@@ -23,8 +23,8 @@ type RoomInfo struct {
 }
 
 type RoomInteractor struct {
-	RecieveChan chan model.ClientMsg // канал для обработки входящих через websocket сообщений одним воркером комнаты
-	SendChan    chan SendRooomMsg    // канал для рассылки сообщений игрокам комнаты через werbsocket
+	RecieveChan chan model.GameMsg // канал для обработки входящих через websocket сообщений одним воркером комнаты
+	SendChan    chan SendRooomMsg  // канал для рассылки сообщений игрокам комнаты через werbsocket
 }
 
 type RecieveRoomMsg struct {
@@ -39,7 +39,7 @@ func (r *RoomManager) GetRoomInteractor(roomID guid.Guid) *RoomInteractor {
 	x, ok := r.interactors.data[roomID]
 	if !ok {
 		x = &RoomInteractor{
-			RecieveChan: make(chan model.ClientMsg),
+			RecieveChan: make(chan model.GameMsg),
 			SendChan:    make(chan SendRooomMsg),
 		}
 
@@ -57,7 +57,7 @@ func (r *RoomManager) GetRoomInteractor(roomID guid.Guid) *RoomInteractor {
 
 // подключение к существующей комнате или создание комнаты
 // подключаться нужно каждый раз при коннекте игрока
-func (r *RoomManager) PlayerConnect(msg *model.ClientMsg) {
+func (r *RoomManager) PlayerConnect(msg *model.GameMsg) {
 	room := r.getExistingRoom(msg.PlayerID, msg.GameType)
 	if room != nil {
 		// комната уже есть,
@@ -69,7 +69,7 @@ func (r *RoomManager) PlayerConnect(msg *model.ClientMsg) {
 }
 
 // выход из комнаты (выйти можно только один раз)
-func (r *RoomManager) PlayerQuit(msg *model.ClientMsg) {
+func (r *RoomManager) PlayerQuit(msg *model.GameMsg) {
 
 }
 

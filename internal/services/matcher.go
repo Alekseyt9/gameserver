@@ -24,11 +24,16 @@ type MatcherQueue struct {
 	lock sync.RWMutex
 }
 
-func New() *Matcher {
+func New() (*Matcher, error) {
 	m := &Matcher{
 		queue: &MatcherQueue{
 			list: list.New(),
 		},
+	}
+
+	err := m.loadWaitingRooms()
+	if err != nil {
+		return nil, err
 	}
 
 	// задача на распределение игроков по комнатам
@@ -39,7 +44,30 @@ func New() *Matcher {
 		}
 	}()
 
-	return m
+	return m, nil
+}
+
+// загрузка комнат в ожидании игроков из базы
+func (m *Matcher) loadWaitingRooms() error {
+	rooms, err := m.store.LoadWaitingRooms()
+	if err != nil {
+		return err
+	}
+
+	m.rooms = make(map[string]*GameRoomGroup)
+	for _, r := range rooms {
+		rg, ok := m.rooms[r.GameID]
+		if !ok {
+			rg = &GameRoomGroup{
+				playersCount: 2, // TODO !! брать из обработчика игры
+				rooms:        make([]model.MatcherRoom, 0),
+			}
+			m.rooms[r.GameID] = rg
+		}
+		rg.rooms = append(rg.rooms, r)
+	}
+
+	return nil
 }
 
 // добавляет запрос на комнату, только если такого еще нет
