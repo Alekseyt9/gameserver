@@ -1,21 +1,25 @@
 package store
 
 import (
+	"context"
+	"errors"
 	"gameserver/internal/services/model"
 
 	"github.com/beevik/guid"
 )
 
+var ErrNotFound = errors.New("not found")
+
 type Store interface {
-	GetUser(id guid.Guid) (*model.Player, error)
-	CreateUser(*model.Player) error
+	GetUser(ctx context.Context, id guid.Guid) (*model.Player, error)
+	CreateUser(ctx context.Context, player *model.Player) error
 
-	GetRoomState(playerID guid.Guid, gameType string) (string, error)
-	SetRoomState(id guid.Guid, state string) error
+	GetRoom(ctx context.Context, playerID guid.Guid, gameType string) (*model.Room, error)
+	SetRoomState(ctx context.Context, id guid.Guid, state string) error
 
-	CreateRoom() error
-	DropRoom(id guid.Guid) error
+	CreateRoom(ctx context.Context) error
+	DropRoom(ctx context.Context, id guid.Guid) error
 
-	CreateOrUpdateRooms([]model.MatcherRoom) error
-	LoadWaitingRooms() ([]model.MatcherRoom, error)
+	CreateOrUpdateRooms(ctx context.Context, rooms []model.MatcherRoom) error
+	LoadWaitingRooms(ctx context.Context) ([]model.MatcherRoom, error)
 }

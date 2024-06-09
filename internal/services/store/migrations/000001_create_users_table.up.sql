@@ -1,23 +1,24 @@
 
 CREATE TABLE Players ( 
-    PlayerId 	UUID PRIMARY KEY, 
+    Id 	        UUID PRIMARY KEY, 
     Name 		TEXT NOT NULL 
 );
 
 CREATE TABLE Rooms (
-    RoomId 		    UUID PRIMARY KEY,
-    GameType 		TEXT NOT NULL,
+    Id 		        UUID PRIMARY KEY,
+    GameId		    TEXT NOT NULL,
     State 		    TEXT NOT NULL,
+    Status          TEXT NOT NULL,
     LastMove 		TIME NOT NULL,
     DeadlineMove 	TIME NOT NULL
 );
 
 CREATE TABLE RoomPlayers (
     PlayerId 	UUID,
-    RoomId 	UUID,
+    RoomId 	    UUID,
     PRIMARY KEY (PlayerId, RoomId),
-    FOREIGN KEY (PlayerId) REFERENCES Players(PlayerId),
-    FOREIGN KEY (RoomId) REFERENCES Rooms(RoomId) ON DELETE CASCADE
+    FOREIGN KEY (PlayerId) REFERENCES Players(Id),
+    FOREIGN KEY (RoomId) REFERENCES Rooms(Id) ON DELETE CASCADE
 );
 
 

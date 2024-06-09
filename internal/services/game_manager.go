@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"errors"
 	game "gameserver/internal/services/game/tictactoe"
 	"gameserver/internal/services/model"
@@ -24,7 +25,7 @@ func CreareGameManager(store store.Store) *GameManager {
 	return man
 }
 
-func (g *GameManager) Process(msg *model.GameMsg) error {
+func (g *GameManager) Process(ctx context.Context, msg *model.GameMsg) error {
 	// поднимает state для пользователя+тип игры
 	// передает в обработчик
 
@@ -32,7 +33,7 @@ func (g *GameManager) Process(msg *model.GameMsg) error {
 		return errors.New("wrong MessageType")
 	}
 
-	state, err := g.store.GetRoomState(msg.PlayerID, msg.GameType)
+	room, err := g.store.GetRoom(ctx, msg.PlayerID, msg.GameType)
 	if err != nil {
 		return err
 	}
@@ -43,7 +44,7 @@ func (g *GameManager) Process(msg *model.GameMsg) error {
 	}
 
 	procCtx := &model.GameProcessorCtx{}
-	proc.Process(procCtx, state, msg)
+	proc.Process(procCtx, room.State, msg)
 
 	return nil
 }

@@ -2,6 +2,7 @@ package services
 
 import (
 	"container/list"
+	"context"
 	"gameserver/internal/services/model"
 	"gameserver/internal/services/store"
 	"sync"
@@ -31,15 +32,17 @@ func New() (*Matcher, error) {
 		},
 	}
 
-	err := m.loadWaitingRooms()
+	ctx := context.Background()
+	err := m.loadWaitingRooms(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	// задача на распределение игроков по комнатам
 	go func() {
+		ctx := context.Background()
 		for {
-			m.doMatching()
+			m.doMatching(ctx)
 			time.Sleep(time.Microsecond * 500)
 		}
 	}()
@@ -48,8 +51,8 @@ func New() (*Matcher, error) {
 }
 
 // загрузка комнат в ожидании игроков из базы
-func (m *Matcher) loadWaitingRooms() error {
-	rooms, err := m.store.LoadWaitingRooms()
+func (m *Matcher) loadWaitingRooms(ctx context.Context) error {
+	rooms, err := m.store.LoadWaitingRooms(ctx)
 	if err != nil {
 		return err
 	}
@@ -86,7 +89,7 @@ func (m *Matcher) CheckAndAdd(q model.RoomQuery) bool {
 	return true
 }
 
-func (m *Matcher) doMatching() error {
+func (m *Matcher) doMatching(ctx context.Context) error {
 	s := m.queueToSlice()
 
 	for _, l := range s {
@@ -126,7 +129,7 @@ func (m *Matcher) doMatching() error {
 		rooms = append(rooms, v.rooms...)
 	}
 
-	err := m.store.CreateOrUpdateRooms(rooms)
+	err := m.store.CreateOrUpdateRooms(ctx, rooms)
 	if err != nil {
 		return nil
 	}

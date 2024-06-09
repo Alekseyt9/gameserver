@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"gameserver/internal/services/model"
 	"gameserver/internal/services/store"
 	"sync"
@@ -45,8 +46,9 @@ func (r *RoomManager) GetRoomInteractor(roomID guid.Guid) *RoomInteractor {
 
 		// создаем воркер для комнаты
 		go func() {
+			ctx := context.Background()
 			for m := range x.RecieveChan {
-				r.gameManager.Process(&m)
+				r.gameManager.Process(ctx, &m)
 			}
 		}()
 

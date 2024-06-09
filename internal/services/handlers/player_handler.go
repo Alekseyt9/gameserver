@@ -19,7 +19,7 @@ func (h *Handler) RegisterPlayer(c *gin.Context) {
 	c.SetCookie("playerID", player.ID.String(), maxAge,
 		"/", "", false, true)
 
-	err := h.store.CreateUser(&player)
+	err := h.store.CreateUser(c.Request.Context(), &player)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "create user in DB"})
 	}
