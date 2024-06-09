@@ -11,6 +11,6 @@ type TTTStartData struct {
 	Players [2]guid.Guid
 }
 
-type TTTTurnData struct {
+type TTTMoveData struct {
 	Move [2]byte
 }

@@ -19,3 +19,7 @@ func (c *GameProcessorCtx) SaveState(s string) {
 func (c *GameProcessorCtx) SendMessages(msgs []SendMessage) {
 
 }
+
+func (c *GameProcessorCtx) SendError(playerID guid.Guid, text string) {
+
+}
