@@ -20,7 +20,9 @@ type Config struct {
 }
 
 func Run(cfg *Config) {
+	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
+
 	fileServer(r)
 	regHandlers(r, cfg)
 }
