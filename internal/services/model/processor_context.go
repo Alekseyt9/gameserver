@@ -12,11 +12,15 @@ type SendMessage struct {
 	message  string
 }
 
-func (c *GameProcessorCtx) SaveState(s string) {
-
+func (c *GameProcessorCtx) SaveState(s string) error {
+	return nil
 }
 
 func (c *GameProcessorCtx) SendMessages(msgs []SendMessage) {
+
+}
+
+func (c *GameProcessorCtx) SendMessage(msg SendMessage) {
 
 }
 
