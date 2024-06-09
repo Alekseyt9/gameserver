@@ -89,13 +89,62 @@ func (s *DBStore) DropRoom(ctx context.Context, id guid.Guid) error {
 }
 
 func (s *DBStore) CreateOrUpdateRooms(ctx context.Context, rooms []model.MatcherRoom) error {
-	// TODO создавать ID для комнат и игроков
-
 	tx, err := s.conn.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback() //nolint:errcheck //defer
+
+	stmtRoomInsert, err := tx.PrepareContext(ctx, `
+	insert into Rooms(Id, GameId, Status)
+	values ($1, $2, $3)
+	`)
+	if err != nil {
+		return err
+	}
+	defer stmtRoomInsert.Close()
+
+	stmtRoomUpdate, err := tx.PrepareContext(ctx, `
+	update Rooms
+	set Status = $1
+	where Id = $2
+	`)
+	if err != nil {
+		return err
+	}
+	defer stmtRoomUpdate.Close()
+
+	stmtRoomPlayerInsert, err := tx.PrepareContext(ctx, `
+	insert into RoomPlayers(PlayerId, RoomId)
+	values ($1, $2)
+	`)
+	if err != nil {
+		return err
+	}
+	defer stmtRoomPlayerInsert.Close()
+
+	for _, r := range rooms {
+		if r.IsNew {
+			_, err = stmtRoomInsert.ExecContext(ctx, guid.New(), r.GameID, r.Status)
+			if err != nil {
+				return err
+			}
+		} else {
+			_, err = stmtRoomUpdate.ExecContext(ctx, r.Status)
+			if err != nil {
+				return err
+			}
+		}
+
+		for _, p := range r.Players {
+			if p.IsNew {
+				_, err = stmtRoomPlayerInsert.ExecContext(ctx, p.PlayerID, r.ID)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
 
 	return tx.Commit()
 }

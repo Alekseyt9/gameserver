@@ -114,7 +114,7 @@ func (m *Matcher) doMatching(ctx context.Context) error {
 		}
 
 		wr.Players = append(wr.Players, model.MatcherPlayer{
-			PlayerId: l.PlayerID,
+			PlayerID: l.PlayerID,
 			IsNew:    true,
 		})
 		if len(wr.Players) == rg.playersCount {

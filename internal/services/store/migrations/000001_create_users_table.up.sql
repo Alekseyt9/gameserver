@@ -12,6 +12,7 @@ CREATE TABLE Rooms (
     LastMove 		TIME NOT NULL,
     DeadlineMove 	TIME NOT NULL
 );
+CREATE INDEX rooms_game_id ON Rooms (GameId);
 
 CREATE TABLE RoomPlayers (
     PlayerId 	UUID,

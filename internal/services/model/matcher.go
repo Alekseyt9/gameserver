@@ -12,7 +12,7 @@ type MatcherRoom struct {
 
 type MatcherPlayer struct {
 	IsNew    bool // новый игрок в комнате
-	PlayerId guid.Guid
+	PlayerID guid.Guid
 }
 
 // запрос игрока на комнату
