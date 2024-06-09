@@ -64,14 +64,6 @@ func fileServer(r *gin.Engine) {
 		tmpl.Execute(c.Writer, data)
 	})
 
-	/*
-		r.GET("/favicon.ico", func(c *gin.Context) {
-			start := time.Now()
-			c.File(filepath.Join(contentDir, "favicon.ico"))
-			duration := time.Since(start)
-			fmt.Printf("Time to serve /favicon.ico: %v", duration)
-		})*/
-
 	err := r.Run(":8080")
 	if err != nil {
 		panic("Ошибка запуска сервера: " + err.Error())
