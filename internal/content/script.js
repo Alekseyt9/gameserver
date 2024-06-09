@@ -52,6 +52,7 @@ class WebSocketManager {
 var wsUrlElement = document.getElementById("ws-url");
 var wsUrl = wsUrlElement ? wsUrlElement.textContent : "ws://default-url";
 
+/*
 window.ws = new WebSocketManager(wsUrl);
 const wsInstance = window.ws.getConnection();
 
@@ -67,3 +68,4 @@ window.ws.subscribe('onmessage', (event) => {
 window.ws.subscribe('onclose', (event) => {
     console.log("Connection closed");
 });
+*/

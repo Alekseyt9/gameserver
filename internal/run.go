@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"path/filepath"
 
+	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 
 	"gameserver/internal/services/handlers"
@@ -40,6 +41,12 @@ func regHandlers(r *gin.Engine, cfg *Config) {
 }
 
 func fileServer(r *gin.Engine) {
+
+	r.Use(gzip.Gzip(gzip.BestCompression))
+
+	// Middleware для установки заголовков кэширования
+	r.Use(staticCacheMiddleware())
+
 	contentDir := filepath.Join("..", "..", "internal", "content")
 	r.StaticFS("/content", http.Dir(contentDir))
 
@@ -62,5 +69,12 @@ func fileServer(r *gin.Engine) {
 	err := r.Run(":8080")
 	if err != nil {
 		panic("Ошибка запуска сервера: " + err.Error())
+	}
+}
+
+func staticCacheMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Header("Cache-Control", "public, max-age=31536000")
+		c.Next()
 	}
 }
