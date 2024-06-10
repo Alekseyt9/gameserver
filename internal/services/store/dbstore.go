@@ -34,7 +34,7 @@ func NewDBStore(connString string) (Store, error) {
 	}, nil
 }
 
-func (s *DBStore) GetUser(ctx context.Context, id guid.Guid) (*model.Player, error) {
+func (s *DBStore) GetPlayer(ctx context.Context, id guid.Guid) (*model.Player, error) {
 	row := s.conn.QueryRowContext(ctx, `SELECT Name FROM Players WHERE Id = $1`, id)
 	var name string
 	err := row.Scan(&name)
@@ -46,7 +46,7 @@ func (s *DBStore) GetUser(ctx context.Context, id guid.Guid) (*model.Player, err
 	return &model.Player{ID: id, Name: name}, nil
 }
 
-func (s *DBStore) CreateUser(ctx context.Context, p *model.Player) error {
+func (s *DBStore) CreatePlayer(ctx context.Context, p *model.Player) error {
 	_, err := s.conn.ExecContext(ctx, `
 		insert into Players(Id, Name)
 		values ($1, $2)
@@ -54,13 +54,13 @@ func (s *DBStore) CreateUser(ctx context.Context, p *model.Player) error {
 	return err
 }
 
-func (s *DBStore) GetRoom(ctx context.Context, playerID guid.Guid, gameType string) (*model.Room, error) {
+func (s *DBStore) GetRoom(ctx context.Context, playerID guid.Guid, gameID string) (*model.Room, error) {
 	row := s.conn.QueryRowContext(ctx, `
 		SELECT r.ID, r.State
 		FROM Rooms r 
 		join RoomsPlayers rp on rp.RoomID = r.ID 
 		WHERE r.GameType = $1 and rp.ID = $2`,
-		gameType, playerID)
+		gameID, playerID)
 
 	var id guid.Guid
 	var state string
@@ -72,21 +72,13 @@ func (s *DBStore) GetRoom(ctx context.Context, playerID guid.Guid, gameType stri
 	return &model.Room{ID: id, State: state}, nil
 }
 
-func (s *DBStore) SetRoomState(ctx context.Context, id guid.Guid, state string) error {
+func (s *DBStore) SetRoomState(ctx context.Context, roomID guid.Guid, state string) error {
 	_, err := s.conn.ExecContext(ctx, `
 		update Rooms
 		set State = $1
 		where Id = $2
-	`, id, state)
+	`, roomID, state)
 	return err
-}
-
-func (s *DBStore) CreateRoom(ctx context.Context) error {
-	return errors.New("not implemented")
-}
-
-func (s *DBStore) DropRoom(ctx context.Context, id guid.Guid) error {
-	return errors.New("not implemented")
 }
 
 func (s *DBStore) CreateOrUpdateRooms(ctx context.Context, rooms []model.MatcherRoom) error {

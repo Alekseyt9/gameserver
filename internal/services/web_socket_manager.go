@@ -37,7 +37,7 @@ func NewWSManager(url string, pm *PlayerManager, rm *RoomManager) *WebSocketMana
 
 		go func() {
 			for msg := range sendCh {
-				s.Write([]byte(msg.Data))
+				s.Write([]byte(msg.Message))
 			}
 		}()
 	})
