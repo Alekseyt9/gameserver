@@ -94,7 +94,13 @@ func (m *Matcher) doMatching(ctx context.Context) error {
 	s := m.queueToSlice()
 
 	for _, l := range s {
-		rg := m.rooms[l.GameID]
+		rg, ok := m.rooms[l.GameID]
+		if !ok {
+			rg = &GameRoomGroup{
+				rooms: make([]model.MatcherRoom, 0),
+			}
+			m.rooms[l.GameID] = rg
+		}
 
 		// получаем первую комнату, которая не заполнена
 		var wr *model.MatcherRoom

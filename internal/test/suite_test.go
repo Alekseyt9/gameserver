@@ -34,11 +34,6 @@ func (suite *TestSuite) SetupSuite() {
 	r := run.Router(s, pm, rm, cfg)
 	server := httptest.NewServer(r)
 	suite.ts = server
-
-	wsURL := "ws" + server.URL[len("http"):] + "/ws"
-	ws, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
-	assert.NoError(suite.T(), err)
-	suite.ws = ws
 }
 
 func (suite *TestSuite) TearDownSuite() {

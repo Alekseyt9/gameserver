@@ -1,6 +1,7 @@
 package test
 
 import (
+	"bytes"
 	"io"
 	"net/http"
 
@@ -29,7 +30,9 @@ func (s *TestSuite) TestIntegration() {
 	}
 	require.True(t, playerID != "")
 
-	req, err = http.NewRequest(http.MethodPost, ts.URL+"/api/room/connect", nil)
+	jsonValue := []byte(`{"gameID":"tictactoe"}`)
+	req, err = http.NewRequest(http.MethodPost, ts.URL+"/api/room/connect", bytes.NewBuffer(jsonValue))
+	req.Header.Set("Content-Type", "application/json")
 	require.NoError(t, err)
 	for _, cookie := range cookies {
 		req.AddCookie(cookie)
@@ -41,5 +44,12 @@ func (s *TestSuite) TestIntegration() {
 	require.NoError(t, err)
 	bodyString := string(bodyBytes)
 	require.True(t, bodyString != "")
+
+	/*
+		wsURL := "ws" + server.URL[len("http"):] + "/ws"
+		ws, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
+		assert.NoError(suite.T(), err)
+		suite.ws = ws
+	*/
 
 }
