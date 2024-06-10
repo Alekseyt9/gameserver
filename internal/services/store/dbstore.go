@@ -56,10 +56,11 @@ func (s *DBStore) CreateUser(ctx context.Context, p *model.Player) error {
 
 func (s *DBStore) GetRoom(ctx context.Context, playerID guid.Guid, gameType string) (*model.Room, error) {
 	row := s.conn.QueryRowContext(ctx, `
-	SELECT r.ID, r.State
-	FROM Rooms r 
-	join RoomsPlayers rp on rp.RoomID = r.ID 
-	WHERE r.GameType = $1 and rp.ID = $2`, gameType, playerID)
+		SELECT r.ID, r.State
+		FROM Rooms r 
+		join RoomsPlayers rp on rp.RoomID = r.ID 
+		WHERE r.GameType = $1 and rp.ID = $2`,
+		gameType, playerID)
 
 	var id guid.Guid
 	var state string
@@ -73,9 +74,9 @@ func (s *DBStore) GetRoom(ctx context.Context, playerID guid.Guid, gameType stri
 
 func (s *DBStore) SetRoomState(ctx context.Context, id guid.Guid, state string) error {
 	_, err := s.conn.ExecContext(ctx, `
-	update Rooms
-	set State = $1
-	where Id = $2
+		update Rooms
+		set State = $1
+		where Id = $2
 	`, id, state)
 	return err
 }
@@ -96,8 +97,8 @@ func (s *DBStore) CreateOrUpdateRooms(ctx context.Context, rooms []model.Matcher
 	defer tx.Rollback() //nolint:errcheck //defer
 
 	stmtRoomInsert, err := tx.PrepareContext(ctx, `
-	insert into Rooms(Id, GameId, Status)
-	values ($1, $2, $3)
+		insert into Rooms(Id, GameId, Status)
+		values ($1, $2, $3)
 	`)
 	if err != nil {
 		return err
@@ -105,9 +106,9 @@ func (s *DBStore) CreateOrUpdateRooms(ctx context.Context, rooms []model.Matcher
 	defer stmtRoomInsert.Close()
 
 	stmtRoomUpdate, err := tx.PrepareContext(ctx, `
-	update Rooms
-	set Status = $1
-	where Id = $2
+		update Rooms
+		set Status = $1
+		where Id = $2
 	`)
 	if err != nil {
 		return err
@@ -115,8 +116,8 @@ func (s *DBStore) CreateOrUpdateRooms(ctx context.Context, rooms []model.Matcher
 	defer stmtRoomUpdate.Close()
 
 	stmtRoomPlayerInsert, err := tx.PrepareContext(ctx, `
-	insert into RoomPlayers(PlayerId, RoomId)
-	values ($1, $2)
+		insert into RoomPlayers(PlayerId, RoomId)
+		values ($1, $2)
 	`)
 	if err != nil {
 		return err

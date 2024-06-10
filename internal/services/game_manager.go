@@ -29,16 +29,16 @@ func (g *GameManager) Process(ctx context.Context, msg *model.GameMsg) error {
 	// поднимает state для пользователя+тип игры
 	// передает в обработчик
 
-	if msg.GameType != GameMsgType {
+	if msg.MessageType != GameMsgType {
 		return errors.New("wrong MessageType")
 	}
 
-	room, err := g.store.GetRoom(ctx, msg.PlayerID, msg.GameType)
+	room, err := g.store.GetRoom(ctx, msg.PlayerID, msg.GameID)
 	if err != nil {
 		return err
 	}
 
-	proc, err := g.getProcessor(msg.GameType)
+	proc, err := g.getProcessor(msg.GameID)
 	if err != nil {
 		return err
 	}

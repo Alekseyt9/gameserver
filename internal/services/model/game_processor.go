@@ -13,7 +13,7 @@ type GameInfo struct {
 type GameMsg struct {
 	MessageType string
 	PlayerID    guid.Guid
-	GameType    string
+	GameID      string
 	Data        string
 }
 

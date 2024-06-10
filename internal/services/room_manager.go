@@ -4,90 +4,86 @@ import (
 	"context"
 	"gameserver/internal/services/model"
 	"gameserver/internal/services/store"
-	"sync"
 
 	"github.com/beevik/guid"
 )
 
 type RoomManager struct {
 	store       store.Store
-	interactors *InteractorMap
 	gameManager *GameManager
+	matcher     *Matcher
+	chanMap     map[guid.Guid]chan model.GameMsg
 }
 
-type InteractorMap struct {
-	data map[guid.Guid]*RoomInteractor
-	lock sync.RWMutex
+type PlayerConnectResult struct {
+	state string
 }
 
-type RoomInfo struct {
+func NewRoomManager(store store.Store, gm *GameManager, m *Matcher) *RoomManager {
+	return &RoomManager{
+		store:       store,
+		gameManager: gm,
+		chanMap:     make(map[guid.Guid]chan model.GameMsg, 100),
+		matcher:     m,
+	}
 }
 
-type RoomInteractor struct {
-	RecieveChan chan model.GameMsg // канал для обработки входящих через websocket сообщений одним воркером комнаты
-	SendChan    chan SendRooomMsg  // канал для рассылки сообщений игрокам комнаты через werbsocket
-}
-
-type RecieveRoomMsg struct {
-}
-
-type SendRooomMsg struct {
-}
-
-func (r *RoomManager) GetRoomInteractor(roomID guid.Guid) *RoomInteractor {
-	r.interactors.lock.Lock()
-	defer r.interactors.lock.Unlock()
-	x, ok := r.interactors.data[roomID]
+func (m *RoomManager) GetOrCreateChan(roomID guid.Guid) chan model.GameMsg {
+	ch, ok := m.chanMap[roomID]
 	if !ok {
-		x = &RoomInteractor{
-			RecieveChan: make(chan model.GameMsg),
-			SendChan:    make(chan SendRooomMsg),
-		}
+		ch = make(chan model.GameMsg, 100)
+		m.chanMap[roomID] = ch
 
 		// создаем воркер для комнаты
 		go func() {
 			ctx := context.Background()
-			for m := range x.RecieveChan {
-				r.gameManager.Process(ctx, &m)
+			for msg := range ch {
+				m.gameManager.Process(ctx, &msg)
 			}
 		}()
-
-		r.interactors.data[roomID] = x
 	}
-	return x
+
+	return ch
+}
+
+func (m *RoomManager) DeleteChan(roomID guid.Guid) {
+	ch, ok := m.chanMap[roomID]
+	if ok {
+		close(ch)
+		delete(m.chanMap, roomID)
+	}
 }
 
 // подключение к существующей комнате или создание комнаты
 // подключаться нужно каждый раз при коннекте игрока
-func (r *RoomManager) PlayerConnect(msg *model.GameMsg) {
-	room := r.getExistingRoom(msg.PlayerID, msg.GameType)
-	if room != nil {
-		// комната уже есть,
-		// если комната в режиме игры - стартуем игру
-		// !!! TODO если в режиме ожидания
+func (m *RoomManager) PlayerConnect(ctx context.Context, msg *model.GameMsg) (*PlayerConnectResult, error) {
+	room, err := m.GetExistingRoom(ctx, msg.PlayerID, msg.GameID)
+	if err != nil {
+		return nil, err
+	}
+
+	if room != nil && room.Status == "game" {
+		// комната в игре есть - стартуем игру
+		return &PlayerConnectResult{state: "game"}, nil
 	} else {
-		// !!! TODO ставим в очередь в Matcher
+		// ставим в очередь в матчмейкинг
+		m.matcher.CheckAndAdd(model.RoomQuery{
+			PlayerID: msg.PlayerID,
+			GameID:   msg.GameID,
+		})
+		return &PlayerConnectResult{state: "wait"}, nil
 	}
 }
 
 // выход из комнаты (выйти можно только один раз)
-func (r *RoomManager) PlayerQuit(msg *model.GameMsg) {
+func (m *RoomManager) PlayerQuit(msg *model.GameMsg) {
 
 }
 
-func (r *RoomManager) getExistingRoom(userId guid.Guid, gameType string) *RoomInfo {
-	return nil
-}
-
-/*
-	!TODO
-
--- Получает существующую комнату для игрока или создает новую
--- Существующую: если игра с таким типом для игрока уже есть или игры нет, но игрок подключается к свободной комнате
--- Новую: если нет свободной комнаты для игрока и нет существующей игры игры
-*/
-func (r *RoomManager) getOrCreateRoom(userId guid.Guid, gameType string) {
-	// запрос в хранилище по игроку и типу игры
-	// ? нужна ли комната в базе, котоорая ожидает игроков?
-	// наверное да, тк чтобы игроки могли подключаться, когда другие офлайн
+func (m *RoomManager) GetExistingRoom(ctx context.Context, playerID guid.Guid, gameID string) (*model.Room, error) {
+	r, err := m.store.GetRoom(ctx, playerID, gameID)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
 }
