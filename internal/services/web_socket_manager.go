@@ -55,7 +55,7 @@ func NewWSManager(url string, pm *PlayerManager, rm *RoomManager) *WebSocketMana
 	ws.HandleMessage(func(s *melody.Session, data []byte) {
 		playerID, err := getPlayerID(s)
 		if err != nil {
-			log.Printf("Ошибка получения playerID из куки")
+			log.Printf("Ошибка получения playerID из куки %w", err)
 		}
 
 		msg := createGameMsg(data)
@@ -63,7 +63,7 @@ func NewWSManager(url string, pm *PlayerManager, rm *RoomManager) *WebSocketMana
 		// комната уже есть, тк в игре
 		room, err := m.roomManager.GetExistingRoom(s.Request.Context(), *playerID, msg.GameID)
 		if err != nil {
-			// TODO ошибка в хендлере
+			log.Printf("Ошибка получения комнаты %w", err)
 		}
 
 		ch := m.roomManager.GetOrCreateChan(room.ID)

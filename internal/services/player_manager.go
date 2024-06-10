@@ -9,36 +9,33 @@ import (
 
 type PlayerManager struct {
 	store   store.Store
-	chanMap map[guid.Guid]chan model.GameMsg
+	chanMap map[guid.Guid]chan model.SendMessage
 }
 
 func NewPlayerManager(store store.Store) *PlayerManager {
 	return &PlayerManager{
 		store:   store,
-		chanMap: make(map[guid.Guid]chan model.GameMsg),
+		chanMap: make(map[guid.Guid]chan model.SendMessage),
 	}
 }
-
-/* в хендлере
-// создать нового пользователя (анонимного)
-func (m *PlayerManager) CreateUser() *model.Player {
-	ctx := context.Background()
-	p := model.Player{
-		ID: *guid.New(),
-		Name: ,
-	}
-	m.store.CreateUser(ctx, )
-}
-*/
 
 // получить канал для свази с игроком
-func (m *PlayerManager) GetOrCreateChan(palyerID guid.Guid) chan model.GameMsg {
+func (m *PlayerManager) GetOrCreateChan(palyerID guid.Guid) chan model.SendMessage {
 	ch, ok := m.chanMap[palyerID]
 	if !ok {
-		ch = make(chan model.GameMsg, 100)
+		ch = make(chan model.SendMessage, 100)
 		m.chanMap[palyerID] = ch
 	}
 	return ch
+}
+
+// получить канал для свази с игроком
+func (m *PlayerManager) GetChan(palyerID guid.Guid) *chan model.SendMessage {
+	ch, ok := m.chanMap[palyerID]
+	if !ok {
+		return nil
+	}
+	return &ch
 }
 
 // удалить канал для свзяи с игроком

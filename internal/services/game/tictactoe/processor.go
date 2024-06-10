@@ -35,7 +35,7 @@ func (p *TTCProcessor) GetInfo() *model.GameInfo {
 	}
 }
 
-func (p *TTCProcessor) Process(ctx *model.GameProcessorCtx, st string, msg *model.GameMsg) error {
+func (p *TTCProcessor) Process(ctx model.ProcessorCtx, st string, msg *model.GameMsg) error {
 	m := createGameMessage(msg)
 	s := strToState(st)
 
@@ -59,7 +59,7 @@ func (p *TTCProcessor) Process(ctx *model.GameProcessorCtx, st string, msg *mode
 }
 
 // сделать ход
-func move(ctx *model.GameProcessorCtx, s *TTTState, m *TTTMessage, playerID guid.Guid) {
+func move(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage, playerID guid.Guid) {
 	if playerID != s.turn {
 		ctx.SendError(playerID, "Сейчас ход другого игрока")
 		return
@@ -112,7 +112,7 @@ func oppositeOf(s *TTTState, playerID guid.Guid) guid.Guid {
 }
 
 // игрок покинул комнату
-func quit(ctx *model.GameProcessorCtx, s *TTTState, m *TTTMessage, playerID guid.Guid) error {
+func quit(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage, playerID guid.Guid) error {
 	if len(s.players) == 2 {
 		winner := oppositeOf(s, playerID)
 		s.winner = &winner
@@ -130,7 +130,7 @@ func quit(ctx *model.GameProcessorCtx, s *TTTState, m *TTTMessage, playerID guid
 }
 
 // создаем игроков в state, определяем первый ход
-func start(ctx *model.GameProcessorCtx, s *TTTState, m *TTTMessage) error {
+func start(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage) error {
 	d := m.Data.(TTTStartData)
 	s = &TTTState{
 		state: "game",
@@ -152,7 +152,7 @@ func start(ctx *model.GameProcessorCtx, s *TTTState, m *TTTMessage) error {
 	return nil
 }
 
-func state(ctx *model.GameProcessorCtx, s *TTTState, m *TTTMessage, playerID guid.Guid) {
+func state(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage, playerID guid.Guid) {
 	msgs := make([]model.SendMessage, 0)
 
 	for _, p := range s.players {
@@ -162,7 +162,7 @@ func state(ctx *model.GameProcessorCtx, s *TTTState, m *TTTMessage, playerID gui
 	ctx.SendMessages(msgs)
 }
 
-func saveState(ctx *model.GameProcessorCtx, s *TTTState) error {
+func saveState(ctx model.ProcessorCtx, s *TTTState) error {
 	return ctx.SaveState(stateToStr(s))
 }
 
@@ -178,7 +178,7 @@ func createGameMessage(msg *model.GameMsg) *TTTMessage {
 	return nil
 }
 
-func createStateSendMsg(ctx *model.GameProcessorCtx, playerID guid.Guid) model.SendMessage {
+func createStateSendMsg(ctx model.ProcessorCtx, playerID guid.Guid) model.SendMessage {
 	return model.SendMessage{}
 }
 

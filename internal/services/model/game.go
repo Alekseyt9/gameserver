@@ -17,7 +17,19 @@ type GameMsg struct {
 	Data        string
 }
 
+type SendMessage struct {
+	PlayerID guid.Guid
+	Message  string
+}
+
 type GameProcessor interface {
-	Process(ctx *GameProcessorCtx, state string, msg *GameMsg) error
+	Process(ctx ProcessorCtx, state string, msg *GameMsg) error
 	GetInfo() *GameInfo
+}
+
+type ProcessorCtx interface {
+	SaveState(s string) error
+	SendMessages(msgs []SendMessage)
+	SendMessage(msg SendMessage)
+	SendError(playerID guid.Guid, text string)
 }
