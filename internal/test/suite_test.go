@@ -7,31 +7,43 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gorilla/websocket"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
 
 type TestSuite struct {
 	suite.Suite
-	ts *httptest.Server
+	ts    *httptest.Server
+	ws    *websocket.Conn
+	store store.Store
 }
 
 func (suite *TestSuite) SetupSuite() {
 	s := store.NewMemStore()
+	suite.store = s
+
 	pm := services.NewPlayerManager(s)
 	gm := services.NewGameManager(s, pm)
-	m, err := services.NewMatcher()
-	if err != nil {
-		// TODO log
-	}
+	m, err := services.NewMatcher(s)
+	assert.NoError(suite.T(), err)
+
 	rm := services.NewRoomManager(s, gm, m)
 	cfg := &run.Config{}
 
 	r := run.Router(s, pm, rm, cfg)
-	suite.ts = httptest.NewServer(r)
+	server := httptest.NewServer(r)
+	suite.ts = server
+
+	wsURL := "ws" + server.URL[len("http"):] + "/ws"
+	ws, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
+	assert.NoError(suite.T(), err)
+	suite.ws = ws
 }
 
 func (suite *TestSuite) TearDownSuite() {
 	suite.ts.Close()
+	suite.ws.Close()
 }
 
 func TestRouterSuite(t *testing.T) {

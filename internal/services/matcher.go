@@ -25,11 +25,12 @@ type MatcherQueue struct {
 	lock sync.RWMutex
 }
 
-func NewMatcher() (*Matcher, error) {
+func NewMatcher(store store.Store) (*Matcher, error) {
 	m := &Matcher{
 		queue: &MatcherQueue{
 			list: list.New(),
 		},
+		store: store,
 	}
 
 	ctx := context.Background()
