@@ -47,12 +47,12 @@ func Router(s store.Store, pm *services.PlayerManager, rm *services.RoomManager,
 	r := gin.Default()
 	services.NewWSManager(r, pm, rm)
 	setupFileServer(r)
-	setupHandlers(r, s)
+	setupHandlers(r, s, rm)
 	return r
 }
 
-func setupHandlers(r *gin.Engine, s store.Store) {
-	h := handlers.New(s)
+func setupHandlers(r *gin.Engine, s store.Store, rm *services.RoomManager) {
+	h := handlers.New(s, rm)
 	r.POST("/api/player/register", h.RegisterPlayer)
 	r.POST("/api/room/connect", h.ConnectRoom)
 	r.POST("/api/room/quit", h.QuitRoom)
