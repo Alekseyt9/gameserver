@@ -153,20 +153,47 @@ func (s *DBStore) LoadWaitingRooms(ctx context.Context) ([]model.MatcherRoom, er
 	res := make([]model.MatcherRoom, 0)
 	var rows *sql.Rows
 
-	rows, err := s.conn.QueryContext(ctx, "select Id, GameId, Status from Rooms where Status = 'wait'")
+	// одним запросом загружаем комнаты и игроков
+	rows, err := s.conn.QueryContext(ctx, `
+		select r.Id, r.GameId, r.Status, rp.PlayerId
+		from Rooms r
+		left join RoomPlayers rp on rp.RoomId = r.Id
+		where r.Status = 'wait'
+	`)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	// TODO одним запросом загружать игроков
+	var (
+		curRoomId guid.Guid
+		room      model.MatcherRoom
+		roomID    guid.Guid
+		gameID    string
+		status    string
+		playerID  *guid.Guid
+	)
 
 	for rows.Next() {
-		r := model.MatcherRoom{}
-		if err = rows.Scan(&r.ID, &r.GameID, &r.Status); err != nil {
+		if err = rows.Scan(&roomID, &gameID, &status, &playerID); err != nil {
 			return nil, err
 		}
-		res = append(res, r)
+		if curRoomId != roomID {
+			room = model.MatcherRoom{
+				ID:      roomID,
+				Players: make([]model.MatcherPlayer, 0),
+				Status:  status,
+				GameID:  gameID,
+			}
+			curRoomId = room.ID
+			res = append(res, room)
+		} else {
+			if playerID != nil {
+				room.Players = append(room.Players, model.MatcherPlayer{
+					PlayerID: *playerID,
+				})
+			}
+		}
 	}
 
 	if err = rows.Err(); err != nil {
