@@ -1,4 +1,4 @@
-package store_test
+package store
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"github.com/beevik/guid"
 )
 
+// для тестов
 type MemStore struct {
 	rooms       map[guid.Guid]*MSRoom
 	players     map[guid.Guid]*MSPlayer
@@ -87,7 +88,32 @@ func (s *MemStore) SetRoomState(ctx context.Context, id guid.Guid, state string)
 }
 
 func (s *MemStore) CreateOrUpdateRooms(ctx context.Context, rooms []model.MatcherRoom) error {
+	for _, r := range rooms {
+		if r.IsNew {
+			s.rooms[r.ID] = &MSRoom{
+				ID:     r.ID,
+				GameID: r.GameID,
+				State:  "",
+				Status: r.Status,
+			}
+		} else {
+			old, ok := s.rooms[r.ID]
+			if ok {
+				old.Status = r.Status
+			}
+		}
 
+		for _, p := range r.Players {
+			if p.IsNew {
+				s.roomPlayers = append(s.roomPlayers, MSRoomPlayer{
+					PlayerID: p.PlayerID,
+					RoomID:   r.ID,
+				})
+			}
+		}
+	}
+
+	return nil
 }
 
 func (s *MemStore) LoadWaitingRooms(ctx context.Context) ([]model.MatcherRoom, error) {

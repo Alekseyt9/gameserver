@@ -1,4 +1,4 @@
-package services
+package run
 
 import (
 	"html/template"
@@ -8,6 +8,7 @@ import (
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 
+	"gameserver/internal/services"
 	"gameserver/internal/services/handlers"
 	"gameserver/internal/services/store"
 )
@@ -21,29 +22,44 @@ type Config struct {
 }
 
 func Run(cfg *Config) {
-	gin.SetMode(gin.ReleaseMode)
-	r := gin.Default()
-
-	fileServer(r)
-	regHandlers(r, cfg)
-}
-
-func regHandlers(r *gin.Engine, cfg *Config) {
-	store, err := store.NewDBStore(cfg.ConnectionString)
+	s, err := store.NewDBStore(cfg.ConnectionString)
 	if err != nil {
 		// TODO log
 	}
+	pm := services.NewPlayerManager(s)
+	gm := services.NewGameManager(s, pm)
+	m, err := services.NewMatcher()
+	if err != nil {
+		// TODO log
+	}
+	rm := services.NewRoomManager(s, gm, m)
 
-	h := handlers.New(store)
+	r := Router(s, pm, rm, cfg)
+
+	err = r.Run(":8080")
+	if err != nil {
+		panic("Ошибка запуска сервера: " + err.Error())
+	}
+}
+
+func Router(s store.Store, pm *services.PlayerManager, rm *services.RoomManager, cfg *Config) *gin.Engine {
+	gin.SetMode(gin.ReleaseMode)
+	r := gin.Default()
+	services.NewWSManager(r, pm, rm)
+	setupFileServer(r)
+	setupHandlers(r, s)
+	return r
+}
+
+func setupHandlers(r *gin.Engine, s store.Store) {
+	h := handlers.New(s)
 	r.POST("/api/player/register", h.RegisterPlayer)
 	r.POST("/api/room/connect", h.ConnectRoom)
 	r.POST("/api/room/quit", h.QuitRoom)
 }
 
-func fileServer(r *gin.Engine) {
+func setupFileServer(r *gin.Engine) {
 	r.Use(gzip.Gzip(gzip.BestCompression))
-
-	//r.Use(staticCacheMiddleware())
 
 	contentDir := filepath.Join("..", "..", "internal", "content")
 	r.StaticFS("/content", http.Dir(contentDir))
@@ -63,9 +79,4 @@ func fileServer(r *gin.Engine) {
 		c.Writer.Header().Set("Content-Type", "text/html")
 		tmpl.Execute(c.Writer, data)
 	})
-
-	err := r.Run(":8080")
-	if err != nil {
-		panic("Ошибка запуска сервера: " + err.Error())
-	}
 }

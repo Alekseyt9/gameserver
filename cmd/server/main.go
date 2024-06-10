@@ -1,12 +1,12 @@
 package main
 
-import services "gameserver/internal"
+import "gameserver/internal/run"
 
 type PageData struct {
 	WebSocketURL string
 }
 
 func main() {
-	cfg := &services.Config{}
-	services.Run(cfg)
+	cfg := &run.Config{}
+	run.Run(cfg)
 }

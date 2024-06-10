@@ -14,7 +14,7 @@ type Store interface {
 	GetPlayer(ctx context.Context, id guid.Guid) (*model.Player, error)
 	CreatePlayer(ctx context.Context, player *model.Player) error
 
-	GetRoom(ctx context.Context, playerID guid.Guid, gameType string) (*model.Room, error)
+	GetRoom(ctx context.Context, playerID guid.Guid, gameID string) (*model.Room, error)
 	SetRoomState(ctx context.Context, id guid.Guid, state string) error
 
 	//CreateRoom(ctx context.Context) error

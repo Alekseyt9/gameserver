@@ -25,7 +25,7 @@ type MatcherQueue struct {
 	lock sync.RWMutex
 }
 
-func New() (*Matcher, error) {
+func NewMatcher() (*Matcher, error) {
 	m := &Matcher{
 		queue: &MatcherQueue{
 			list: list.New(),

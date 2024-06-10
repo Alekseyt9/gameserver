@@ -14,13 +14,12 @@ type WebSocketManager struct {
 	roomManager   *RoomManager
 }
 
-func NewWSManager(url string, pm *PlayerManager, rm *RoomManager) *WebSocketManager {
+func NewWSManager(router *gin.Engine, pm *PlayerManager, rm *RoomManager) *WebSocketManager {
 	m := &WebSocketManager{
 		playerManager: pm,
 		roomManager:   rm,
 	}
 
-	router := gin.Default()
 	ws := melody.New()
 
 	router.GET("/ws", func(c *gin.Context) {
@@ -70,7 +69,7 @@ func NewWSManager(url string, pm *PlayerManager, rm *RoomManager) *WebSocketMana
 		ch <- *msg
 	})
 
-	router.Run(url)
+	//router.Run(url)
 
 	return m
 }

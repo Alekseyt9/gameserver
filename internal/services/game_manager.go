@@ -16,7 +16,7 @@ type GameManager struct {
 
 const GameMsgType = "game"
 
-func CreareGameManager(store store.Store, pm *PlayerManager) *GameManager {
+func NewGameManager(store store.Store, pm *PlayerManager) *GameManager {
 	man := &GameManager{
 		procs:         make(map[string]model.GameProcessor),
 		store:         store,
