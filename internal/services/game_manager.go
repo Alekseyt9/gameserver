@@ -55,6 +55,16 @@ func (m *GameManager) Process(ctx context.Context, msg *model.GameMsg) (*GamePro
 	return procCtx, nil
 }
 
+// инициализация игры
+func (m *GameManager) Init(gameID string, players []model.MatcherPlayer) (string, error) {
+	proc, err := m.getProcessor(gameID)
+	if err != nil {
+		return "", err
+	}
+	state := proc.Init(players)
+	return state, err
+}
+
 func (m *GameManager) getProcessor(gameType string) (model.GameProcessor, error) {
 	v, ok := m.procs[gameType]
 	if !ok {

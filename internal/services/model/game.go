@@ -1,6 +1,8 @@
 package model
 
-import "github.com/beevik/guid"
+import (
+	"github.com/beevik/guid"
+)
 
 // общая информация об игре
 type GameInfo struct {
@@ -23,6 +25,7 @@ type SendMessage struct {
 }
 
 type GameProcessor interface {
+	Init(players []MatcherPlayer) string
 	Process(ctx ProcessorCtx, state string, msg *GameMsg) error
 	GetInfo() *GameInfo
 }
@@ -31,11 +34,4 @@ type ProcessorCtx interface {
 	SetState(s string)
 	AddSendMessage(msg SendMessage)
 	AddSendMessages(msgs []SendMessage)
-
-	/*
-		SaveState(s string) error
-		SendMessages(msgs []SendMessage)
-		SendMessage(msg SendMessage)
-		SendError(playerID guid.Guid, text string)
-	*/
 }

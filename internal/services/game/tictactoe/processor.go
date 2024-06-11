@@ -35,16 +35,15 @@ func (p *TTCProcessor) GetInfo() *model.GameInfo {
 	}
 }
 
+func (p *TTCProcessor) Init(players []model.MatcherPlayer) string {
+	return start(players)
+}
+
 func (p *TTCProcessor) Process(ctx model.ProcessorCtx, st string, msg *model.GameMsg) error {
 	m := createGameMessage(msg)
 	s := strToState(st)
 
 	switch m.Kind {
-	case "start":
-		err := start(ctx, s, m)
-		if err != nil {
-			return err
-		}
 	case "state":
 		state(ctx, s, m, msg.PlayerID)
 	case "move":
@@ -131,23 +130,20 @@ func quit(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage, playerID guid.Guid
 }
 
 // создаем игроков в state, определяем первый ход
-func start(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage) error {
-	d := m.Data.(TTTStartData)
-	s = &TTTState{
+func start(players []model.MatcherPlayer) string {
+	s := &TTTState{
 		state: "game",
-		turn:  d.Players[rand.Intn(2)],
+		turn:  players[rand.Intn(2)].PlayerID,
 	}
 
 	// крестик ходит первый
-	if s.turn == d.Players[0] {
-		s.players = []guid.Guid{d.Players[0], d.Players[1]}
+	if s.turn == players[0].PlayerID {
+		s.players = []guid.Guid{players[0].PlayerID, players[1].PlayerID}
 	} else {
-		s.players = []guid.Guid{d.Players[1], d.Players[0]}
+		s.players = []guid.Guid{players[1].PlayerID, players[0].PlayerID}
 	}
 
-	saveState(ctx, s)
-
-	return nil
+	return stateToStr(s)
 }
 
 func state(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage, playerID guid.Guid) {

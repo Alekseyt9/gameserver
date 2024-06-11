@@ -182,22 +182,13 @@ func (m *Matcher) doMatching(ctx context.Context) error {
 
 // инициализируем игру
 func (m *Matcher) initGame(r *model.MatcherRoom) error {
-	ctx := context.Background()
-	gctx, err := m.gameManager.Process(ctx, getInitGameMsg(r))
+	state, err := m.gameManager.Init(r.GameID, r.Players)
 	if err != nil {
 		return err
 	}
-	r.State = gctx.gameState
+	r.State = state
 
 	return nil
-}
-
-func getInitGameMsg(r *model.MatcherRoom) *model.GameMsg {
-	return &model.GameMsg{
-		MessageType: "game",
-		GameID:      r.GameID,
-		Data:        `{"action": "start"}`,
-	}
 }
 
 // рассылаем сообщения игрокам про старт игры (кто онлайн)
