@@ -40,13 +40,17 @@ func (p *TTCProcessor) Init(players []model.MatcherPlayer) (string, error) {
 }
 
 func (p *TTCProcessor) Process(ctx model.ProcessorCtx, st string, msg *model.GameMsg) error {
-	m := createGameMessage(msg)
+	m, err := createGameMessage(msg)
+	if err != nil {
+		return err
+	}
+
 	s, err := strToState(st)
 	if err != nil {
 		return err
 	}
 
-	switch m.Kind {
+	switch m.Action {
 	case "state":
 		state(ctx, s, m, msg.PlayerID)
 	case "move":
@@ -66,21 +70,25 @@ func createErrorMsg(playerID guid.Guid, s string) model.SendMessage {
 }
 
 // сделать ход
-func move(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage, playerID guid.Guid) {
+func move(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage, playerID guid.Guid) error {
 	if playerID != s.Turn {
 		ctx.AddSendMessage(createErrorMsg(playerID, "Сейчас ход другого игрока"))
-		return
+		return nil
 	}
 
-	d := m.Data.(TTTMoveData)
+	d, err := createMoveData(m.Data)
+	if err != nil {
+		return err
+	}
+
 	if d.Move[0] > size-1 && d.Move[1] > size-1 {
 		ctx.AddSendMessage(createErrorMsg(playerID, "Ход за границами поля"))
-		return
+		return nil
 	}
 
 	if s.Field[d.Move[0]][d.Move[1]] != 0 {
 		ctx.AddSendMessage(createErrorMsg(playerID, "Клетка уже занята"))
-		return
+		return nil
 	}
 
 	s.Field[d.Move[0]][d.Move[1]] = figureOf(s, playerID)
@@ -98,6 +106,7 @@ func move(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage, playerID guid.Guid
 	}
 
 	saveState(ctx, s)
+	return nil
 }
 
 // фигура игрока
@@ -203,12 +212,27 @@ func strToState(state string) (*TTTState, error) {
 	return &newState, err
 }
 
-// TODO
-func createGameMessage(msg *model.GameMsg) *TTTMessage {
-	return nil
+func createGameMessage(msg *model.GameMsg) (*TTTMessage, error) {
+	var res TTTMessage
+	err := res.UnmarshalJSON([]byte(msg.Data))
+	if err != nil {
+		return nil, err
+	}
+
+	return &res, nil
 }
 
 // TODO
+func createMoveData(s string) (*TTTMoveData, error) {
+	var res TTTMoveData
+	err := res.UnmarshalJSON([]byte(s))
+	if err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+// создать сообщение с состоянием игры для посылки игроку
 func createStateSendMsg(s *TTTState, playerID guid.Guid) (*model.SendMessage, error) {
 	ss := TTTSendState{
 		Field:   s.Field,
