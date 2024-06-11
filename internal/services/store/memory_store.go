@@ -97,9 +97,11 @@ func (s *MemStore) CreateOrUpdateRooms(ctx context.Context, rooms []model.Matche
 				Status: r.Status,
 			}
 		} else {
-			old, ok := s.rooms[r.ID]
-			if ok {
-				old.Status = r.Status
+			if r.StatusChanged {
+				old, ok := s.rooms[r.ID]
+				if ok {
+					old.Status = r.Status
+				}
 			}
 		}
 

@@ -25,7 +25,7 @@ func (suite *TestSuite) SetupSuite() {
 
 	pm := services.NewPlayerManager(s)
 	gm := services.NewGameManager(s, pm)
-	m, err := services.NewMatcher(s)
+	m, err := services.NewMatcher(s, pm, gm)
 	assert.NoError(suite.T(), err)
 
 	rm := services.NewRoomManager(s, gm, m)

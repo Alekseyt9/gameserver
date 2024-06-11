@@ -3,6 +3,7 @@ package services
 import (
 	"container/list"
 	"context"
+	"fmt"
 	"gameserver/internal/services/model"
 	"gameserver/internal/services/store"
 	"sync"
@@ -10,9 +11,11 @@ import (
 )
 
 type Matcher struct {
-	queue *MatcherQueue             // очередь игроков, кому нужна комната
-	rooms map[string]*GameRoomGroup // комнаты, сгруппированные по играм
-	store store.Store
+	playerManager *PlayerManager
+	gameManager   *GameManager
+	queue         *MatcherQueue             // очередь игроков, кому нужна комната
+	rooms         map[string]*GameRoomGroup // комнаты, сгруппированные по играм
+	store         store.Store
 }
 
 type GameRoomGroup struct {
@@ -25,12 +28,14 @@ type MatcherQueue struct {
 	lock sync.RWMutex
 }
 
-func NewMatcher(store store.Store) (*Matcher, error) {
+func NewMatcher(store store.Store, pm *PlayerManager, gm *GameManager) (*Matcher, error) {
 	m := &Matcher{
 		queue: &MatcherQueue{
 			list: list.New(),
 		},
-		store: store,
+		store:         store,
+		playerManager: pm,
+		gameManager:   gm,
 	}
 
 	ctx := context.Background()
@@ -126,19 +131,22 @@ func (m *Matcher) doMatching(ctx context.Context) error {
 		})
 		if len(wr.Players) == rg.playersCount {
 			wr.Status = "game"
+			wr.StatusChanged = true
 		}
 	}
 
-	// сохраняем все изменения
+	// сохраняем все изменения в базу
 	rooms := make([]model.MatcherRoom, 0)
 
 	for _, v := range m.rooms {
 		rooms = append(rooms, v.rooms...)
 	}
 
+	msgs := m.getStartGameMessages()
+
 	err := m.store.CreateOrUpdateRooms(ctx, rooms)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	// удаляем заполненные комнаты, сбрасываем состояние игроков
@@ -147,6 +155,7 @@ func (m *Matcher) doMatching(ctx context.Context) error {
 		for _, r := range v.rooms { // создаем список комнат в ожидании и оставляем только их
 			if len(r.Players) < v.playersCount {
 				r.IsNew = false
+				r.StatusChanged = false
 				rs = append(rs, r)
 				for _, p := range r.Players { // так как уже в базе - то не новые
 					p.IsNew = false
@@ -156,7 +165,54 @@ func (m *Matcher) doMatching(ctx context.Context) error {
 		m.rooms[g].rooms = rs
 	}
 
+	// рассылаем сообщения о старте игры игрокам (всем игрокам комнат, котрые перешли в режим игры)
+	m.sendMessages(msgs)
+
 	return nil
+}
+
+// рассылаем сообщения игрокам про старт игры (кто онлайн)
+func (m *Matcher) sendMessages(msgs []model.SendMessage) {
+	for _, msg := range msgs {
+		chp := m.playerManager.GetChan(msg.PlayerID)
+		if chp != nil {
+			*chp <- msg
+		}
+	}
+}
+
+// получаем сообщения для рассылки игрокам
+func (m *Matcher) getStartGameMessages() []model.SendMessage {
+	res := make([]model.SendMessage, 0)
+
+	// только комнаты, которые изменили состояние и перешли в игру
+	for _, g := range m.rooms {
+		for _, r := range g.rooms {
+			if r.StatusChanged {
+				for _, p := range r.Players {
+					res = append(res, model.SendMessage{
+						PlayerID: p.PlayerID,
+						Message:  createStartGameMsg(r, p, *m.gameManager.GetGameInfo(r.GameID)),
+					})
+				}
+			}
+		}
+	}
+
+	return res
+}
+
+func createStartGameMsg(r model.MatcherRoom, p model.MatcherPlayer, gi model.GameInfo) string {
+	return fmt.Sprintf(`
+	{
+		"type": "room",
+		"game": "%s"
+		"data": {
+			action: "start",
+			contentLink: "%s"
+		}
+	}
+	`, r.GameID, gi.ContentURL)
 }
 
 // перемещаем из очереди все элементы в слайс, чтобы не блокировать очередь надолго, очередь очищается

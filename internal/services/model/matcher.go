@@ -3,11 +3,12 @@ package model
 import "github.com/beevik/guid"
 
 type MatcherRoom struct {
-	ID      guid.Guid
-	IsNew   bool   // новая комната
-	Status  string // wait/game
-	Players []MatcherPlayer
-	GameID  string
+	ID            guid.Guid
+	IsNew         bool   // новая комната
+	Status        string // wait/game
+	Players       []MatcherPlayer
+	GameID        string
+	StatusChanged bool
 }
 
 type MatcherPlayer struct {

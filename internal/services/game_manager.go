@@ -14,8 +14,6 @@ type GameManager struct {
 	playerManager *PlayerManager
 }
 
-const GameMsgType = "game"
-
 func NewGameManager(store store.Store, pm *PlayerManager) *GameManager {
 	man := &GameManager{
 		procs:         make(map[string]model.GameProcessor),
@@ -27,9 +25,17 @@ func NewGameManager(store store.Store, pm *PlayerManager) *GameManager {
 	return man
 }
 
+func (m *GameManager) GetGameInfo(gameID string) *model.GameInfo {
+	p, ok := m.procs[gameID]
+	if ok {
+		return p.GetInfo()
+	}
+	return nil
+}
+
 // поднимает state для пользователя+тип игры, передает в обработчик
 func (m *GameManager) Process(ctx context.Context, msg *model.GameMsg) error {
-	if msg.MessageType != GameMsgType {
+	if msg.MessageType != "game" {
 		return errors.New("wrong MessageType")
 	}
 

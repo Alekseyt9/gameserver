@@ -123,9 +123,11 @@ func (s *DBStore) CreateOrUpdateRooms(ctx context.Context, rooms []model.Matcher
 				return err
 			}
 		} else {
-			_, err = stmtRoomUpdate.ExecContext(ctx, r.Status)
-			if err != nil {
-				return err
+			if r.StatusChanged {
+				_, err = stmtRoomUpdate.ExecContext(ctx, r.Status)
+				if err != nil {
+					return err
+				}
 			}
 		}
 
