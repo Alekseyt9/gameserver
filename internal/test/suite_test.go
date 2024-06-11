@@ -28,7 +28,7 @@ func (suite *TestSuite) SetupSuite() {
 	m, err := services.NewMatcher(s, pm, gm)
 	assert.NoError(suite.T(), err)
 
-	rm := services.NewRoomManager(s, gm, m)
+	rm := services.NewRoomManager(s, gm, pm, m)
 	cfg := &run.Config{}
 
 	r := run.Router(s, pm, rm, cfg)

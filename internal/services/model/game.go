@@ -28,8 +28,14 @@ type GameProcessor interface {
 }
 
 type ProcessorCtx interface {
-	SaveState(s string) error
-	SendMessages(msgs []SendMessage)
-	SendMessage(msg SendMessage)
-	SendError(playerID guid.Guid, text string)
+	SetState(s string)
+	AddSendMessage(msg SendMessage)
+	AddSendMessages(msgs []SendMessage)
+
+	/*
+		SaveState(s string) error
+		SendMessages(msgs []SendMessage)
+		SendMessage(msg SendMessage)
+		SendError(playerID guid.Guid, text string)
+	*/
 }

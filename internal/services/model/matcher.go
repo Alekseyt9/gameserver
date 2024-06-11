@@ -9,6 +9,7 @@ type MatcherRoom struct {
 	Players       []MatcherPlayer
 	GameID        string
 	StatusChanged bool
+	State         string
 }
 
 type MatcherPlayer struct {

@@ -34,25 +34,25 @@ func (m *GameManager) GetGameInfo(gameID string) *model.GameInfo {
 }
 
 // поднимает state для пользователя+тип игры, передает в обработчик
-func (m *GameManager) Process(ctx context.Context, msg *model.GameMsg) error {
+func (m *GameManager) Process(ctx context.Context, msg *model.GameMsg) (*GameProcessorCtx, error) {
 	if msg.MessageType != "game" {
-		return errors.New("wrong MessageType")
+		return nil, errors.New("wrong MessageType")
 	}
 
 	room, err := m.store.GetRoom(ctx, msg.PlayerID, msg.GameID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	proc, err := m.getProcessor(msg.GameID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	procCtx := NewGameProcessorCtx(m.store, m.playerManager, room.ID, msg.GameID)
+	procCtx := NewGameProcessorCtx(room.ID, msg.GameID)
 	proc.Process(procCtx, room.State, msg)
 
-	return nil
+	return procCtx, nil
 }
 
 func (m *GameManager) getProcessor(gameType string) (model.GameProcessor, error) {

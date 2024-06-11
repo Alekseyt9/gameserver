@@ -58,21 +58,26 @@ func (p *TTCProcessor) Process(ctx model.ProcessorCtx, st string, msg *model.Gam
 	return nil
 }
 
+// TODO
+func createErrorMsg(playerID guid.Guid, s string) model.SendMessage {
+	return model.SendMessage{}
+}
+
 // сделать ход
 func move(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage, playerID guid.Guid) {
 	if playerID != s.turn {
-		ctx.SendError(playerID, "Сейчас ход другого игрока")
+		ctx.AddSendMessage(createErrorMsg(playerID, "Сейчас ход другого игрока"))
 		return
 	}
 
 	d := m.Data.(TTTMoveData)
 	if d.Move[0] > size-1 && d.Move[1] > size-1 {
-		ctx.SendError(playerID, "Ход за границами поля")
+		ctx.AddSendMessage(createErrorMsg(playerID, "Ход за границами поля"))
 		return
 	}
 
 	if s.field[d.Move[0]][d.Move[1]] != 0 {
-		ctx.SendError(playerID, "Клетка уже занята")
+		ctx.AddSendMessage(createErrorMsg(playerID, "Клетка уже занята"))
 		return
 	}
 
@@ -118,12 +123,8 @@ func quit(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage, playerID guid.Guid
 		s.winner = &winner
 		s.state = "finished"
 
-		ctx.SendMessage(createStateSendMsg(ctx, winner))
-
-		err := saveState(ctx, s)
-		if err != nil {
-			return err
-		}
+		ctx.AddSendMessage(createStateSendMsg(ctx, winner))
+		saveState(ctx, s)
 	}
 
 	return nil
@@ -144,10 +145,7 @@ func start(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage) error {
 		s.players = []guid.Guid{d.Players[1], d.Players[0]}
 	}
 
-	err := saveState(ctx, s)
-	if err != nil {
-		return err
-	}
+	saveState(ctx, s)
 
 	return nil
 }
@@ -159,11 +157,11 @@ func state(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage, playerID guid.Gui
 		msgs = append(msgs, createStateSendMsg(ctx, p))
 	}
 
-	ctx.SendMessages(msgs)
+	ctx.AddSendMessages(msgs)
 }
 
-func saveState(ctx model.ProcessorCtx, s *TTTState) error {
-	return ctx.SaveState(stateToStr(s))
+func saveState(ctx model.ProcessorCtx, s *TTTState) {
+	ctx.SetState(stateToStr(s))
 }
 
 func stateToStr(s *TTTState) string {

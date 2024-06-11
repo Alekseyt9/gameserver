@@ -137,6 +137,10 @@ func (m *Matcher) doMatching(ctx context.Context) error {
 		if len(wr.Players) == rg.playersCount {
 			wr.Status = "game"
 			wr.StatusChanged = true
+			err := m.initGame(wr)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -174,6 +178,26 @@ func (m *Matcher) doMatching(ctx context.Context) error {
 	m.sendMessages(msgs)
 
 	return nil
+}
+
+// инициализируем игру
+func (m *Matcher) initGame(r *model.MatcherRoom) error {
+	ctx := context.Background()
+	gctx, err := m.gameManager.Process(ctx, getInitGameMsg(r))
+	if err != nil {
+		return err
+	}
+	r.State = gctx.gameState
+
+	return nil
+}
+
+func getInitGameMsg(r *model.MatcherRoom) *model.GameMsg {
+	return &model.GameMsg{
+		MessageType: "game",
+		GameID:      r.GameID,
+		Data:        `{"action": "start"}`,
+	}
 }
 
 // рассылаем сообщения игрокам про старт игры (кто онлайн)

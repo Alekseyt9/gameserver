@@ -9,22 +9,24 @@ import (
 )
 
 type RoomManager struct {
-	store       store.Store
-	gameManager *GameManager
-	matcher     *Matcher
-	chanMap     map[guid.Guid]chan model.GameMsg
+	store         store.Store
+	gameManager   *GameManager
+	playerManager *PlayerManager
+	matcher       *Matcher
+	chanMap       map[guid.Guid]chan model.GameMsg
 }
 
 type PlayerConnectResult struct {
 	State string
 }
 
-func NewRoomManager(store store.Store, gm *GameManager, m *Matcher) *RoomManager {
+func NewRoomManager(store store.Store, gm *GameManager, pm *PlayerManager, m *Matcher) *RoomManager {
 	return &RoomManager{
-		store:       store,
-		gameManager: gm,
-		chanMap:     make(map[guid.Guid]chan model.GameMsg, 100),
-		matcher:     m,
+		store:         store,
+		gameManager:   gm,
+		chanMap:       make(map[guid.Guid]chan model.GameMsg, 100),
+		matcher:       m,
+		playerManager: pm,
 	}
 }
 
@@ -38,12 +40,35 @@ func (m *RoomManager) GetOrCreateChan(roomID guid.Guid) chan model.GameMsg {
 		go func() {
 			ctx := context.Background()
 			for msg := range ch {
-				m.gameManager.Process(ctx, &msg)
+				gctx, err := m.gameManager.Process(ctx, &msg)
+				if err != nil {
+					//TODO log
+				}
+				m.processResult(gctx)
 			}
 		}()
 	}
 
 	return ch
+}
+
+// сохранение стейта игры, рассылка сообщений
+func (m *RoomManager) processResult(gctx *GameProcessorCtx) error {
+	ctx := context.Background()
+
+	err := m.store.SetRoomState(ctx, gctx.roomID, gctx.gameState)
+	if err != nil {
+		return err
+	}
+
+	for _, msg := range gctx.sendMessages {
+		chp := m.playerManager.GetChan(msg.PlayerID)
+		if chp != nil {
+			*chp <- msg
+		}
+	}
+
+	return nil
 }
 
 func (m *RoomManager) DeleteChan(roomID guid.Guid) {

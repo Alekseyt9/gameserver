@@ -32,7 +32,7 @@ func Run(cfg *Config) {
 	if err != nil {
 		// TODO log
 	}
-	rm := services.NewRoomManager(s, gm, m)
+	rm := services.NewRoomManager(s, gm, pm, m)
 
 	r := Router(s, pm, rm, cfg)
 
