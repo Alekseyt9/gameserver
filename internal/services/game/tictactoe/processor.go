@@ -35,13 +35,16 @@ func (p *TTCProcessor) GetInfo() *model.GameInfo {
 	}
 }
 
-func (p *TTCProcessor) Init(players []model.MatcherPlayer) string {
+func (p *TTCProcessor) Init(players []model.MatcherPlayer) (string, error) {
 	return start(players)
 }
 
 func (p *TTCProcessor) Process(ctx model.ProcessorCtx, st string, msg *model.GameMsg) error {
 	m := createGameMessage(msg)
-	s := strToState(st)
+	s, err := strToState(st)
+	if err != nil {
+		return err
+	}
 
 	switch m.Kind {
 	case "state":
@@ -64,7 +67,7 @@ func createErrorMsg(playerID guid.Guid, s string) model.SendMessage {
 
 // сделать ход
 func move(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage, playerID guid.Guid) {
-	if playerID != s.turn {
+	if playerID != s.Turn {
 		ctx.AddSendMessage(createErrorMsg(playerID, "Сейчас ход другого игрока"))
 		return
 	}
@@ -75,23 +78,23 @@ func move(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage, playerID guid.Guid
 		return
 	}
 
-	if s.field[d.Move[0]][d.Move[1]] != 0 {
+	if s.Field[d.Move[0]][d.Move[1]] != 0 {
 		ctx.AddSendMessage(createErrorMsg(playerID, "Клетка уже занята"))
 		return
 	}
 
-	s.field[d.Move[0]][d.Move[1]] = figureOf(s, playerID)
-	s.turn = playerID
+	s.Field[d.Move[0]][d.Move[1]] = figureOf(s, playerID)
+	s.Turn = playerID
 
 	// проверить конец игры, ничью
-	if checkWin(s.field, figureOf(s, s.players[0])) {
-		s.winner = &s.players[0]
-		s.state = "finished"
-	} else if checkWin(s.field, figureOf(s, s.players[1])) {
-		s.winner = &s.players[1]
-		s.state = "finished"
-	} else if checkDraw(s.field) {
-		s.state = "finished"
+	if checkWin(s.Field, figureOf(s, s.Players[0])) {
+		s.Winner = 0
+		s.State = "finished"
+	} else if checkWin(s.Field, figureOf(s, s.Players[1])) {
+		s.Winner = 1
+		s.State = "finished"
+	} else if checkDraw(s.Field) {
+		s.State = "finished"
 	}
 
 	saveState(ctx, s)
@@ -100,7 +103,7 @@ func move(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage, playerID guid.Guid
 // фигура игрока
 func figureOf(s *TTTState, playerID guid.Guid) byte {
 	// у первого - крестик
-	if s.players[0] == playerID {
+	if s.Players[0] == playerID {
 		return 1
 	}
 	return 0
@@ -108,21 +111,34 @@ func figureOf(s *TTTState, playerID guid.Guid) byte {
 
 // противоположный игрок
 func oppositeOf(s *TTTState, playerID guid.Guid) guid.Guid {
-	p := s.players[0]
+	p := s.Players[0]
 	if p == playerID {
-		p = s.players[1]
+		p = s.Players[1]
 	}
 	return p
 }
 
+func indexOf(s *TTTState, playerID guid.Guid) int {
+	for i, v := range s.Players {
+		if v == playerID {
+			return i
+		}
+	}
+	return -1
+}
+
 // игрок покинул комнату
 func quit(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage, playerID guid.Guid) error {
-	if len(s.players) == 2 {
+	if len(s.Players) == 2 {
 		winner := oppositeOf(s, playerID)
-		s.winner = &winner
-		s.state = "finished"
+		s.Winner = indexOf(s, winner)
+		s.State = "finished"
 
-		ctx.AddSendMessage(createStateSendMsg(ctx, winner))
+		m, err := createStateSendMsg(s, winner)
+		if err != nil {
+			return err
+		}
+		ctx.AddSendMessage(*m)
 		saveState(ctx, s)
 	}
 
@@ -130,50 +146,87 @@ func quit(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage, playerID guid.Guid
 }
 
 // создаем игроков в state, определяем первый ход
-func start(players []model.MatcherPlayer) string {
+func start(players []model.MatcherPlayer) (string, error) {
 	s := &TTTState{
-		state: "game",
-		turn:  players[rand.Intn(2)].PlayerID,
+		State:  "game",
+		Turn:   players[rand.Intn(2)].PlayerID,
+		Winner: -1,
 	}
 
 	// крестик ходит первый
-	if s.turn == players[0].PlayerID {
-		s.players = []guid.Guid{players[0].PlayerID, players[1].PlayerID}
+	if s.Turn == players[0].PlayerID {
+		s.Players = []guid.Guid{players[0].PlayerID, players[1].PlayerID}
 	} else {
-		s.players = []guid.Guid{players[1].PlayerID, players[0].PlayerID}
+		s.Players = []guid.Guid{players[1].PlayerID, players[0].PlayerID}
 	}
 
-	return stateToStr(s)
+	json, err := stateToStr(s)
+	if err != nil {
+		return "", err
+	}
+
+	return json, nil
 }
 
-func state(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage, playerID guid.Guid) {
+func state(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage, playerID guid.Guid) error {
 	msgs := make([]model.SendMessage, 0)
 
-	for _, p := range s.players {
-		msgs = append(msgs, createStateSendMsg(ctx, p))
+	for _, p := range s.Players {
+		m, err := createStateSendMsg(s, p)
+		if err != nil {
+			return err
+		}
+		msgs = append(msgs, *m)
 	}
 
 	ctx.AddSendMessages(msgs)
-}
-
-func saveState(ctx model.ProcessorCtx, s *TTTState) {
-	ctx.SetState(stateToStr(s))
-}
-
-func stateToStr(s *TTTState) string {
-	return ""
-}
-
-func strToState(state string) *TTTState {
 	return nil
 }
 
+func saveState(ctx model.ProcessorCtx, s *TTTState) error {
+	json, err := stateToStr(s)
+	if err != nil {
+		return err
+	}
+	ctx.SetState(json)
+	return nil
+}
+
+func stateToStr(s *TTTState) (string, error) {
+	json, err := s.MarshalJSON()
+	return string(json), err
+}
+
+func strToState(state string) (*TTTState, error) {
+	var newState TTTState
+	err := newState.UnmarshalJSON([]byte(state))
+	return &newState, err
+}
+
+// TODO
 func createGameMessage(msg *model.GameMsg) *TTTMessage {
 	return nil
 }
 
-func createStateSendMsg(ctx model.ProcessorCtx, playerID guid.Guid) model.SendMessage {
-	return model.SendMessage{}
+// TODO
+func createStateSendMsg(s *TTTState, playerID guid.Guid) (*model.SendMessage, error) {
+	ss := TTTSendState{
+		Field:   s.Field,
+		Players: s.Players,
+		Turn:    s.Turn,
+		You:     playerID,
+		State:   s.State,
+	}
+
+	json, err := ss.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.SendMessage{
+		PlayerID: playerID,
+		Message:  string(json),
+	}, nil
 }
 
 // проверить ничью (все поля заняты)

@@ -61,7 +61,7 @@ func (m *GameManager) Init(gameID string, players []model.MatcherPlayer) (string
 	if err != nil {
 		return "", err
 	}
-	state := proc.Init(players)
+	state, err := proc.Init(players)
 	return state, err
 }
 

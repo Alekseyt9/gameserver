@@ -25,7 +25,7 @@ type SendMessage struct {
 }
 
 type GameProcessor interface {
-	Init(players []MatcherPlayer) string
+	Init(players []MatcherPlayer) (string, error)
 	Process(ctx ProcessorCtx, state string, msg *GameMsg) error
 	GetInfo() *GameInfo
 }
