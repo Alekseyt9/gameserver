@@ -20,6 +20,6 @@ type Store interface {
 	//CreateRoom(ctx context.Context) error
 	//DropRoom(ctx context.Context, id guid.Guid) error
 
-	CreateOrUpdateRooms(ctx context.Context, rooms []model.MatcherRoom) error
-	LoadWaitingRooms(ctx context.Context) ([]model.MatcherRoom, error)
+	CreateOrUpdateRooms(ctx context.Context, rooms []*model.MatcherRoom) error
+	LoadWaitingRooms(ctx context.Context) ([]*model.MatcherRoom, error)
 }

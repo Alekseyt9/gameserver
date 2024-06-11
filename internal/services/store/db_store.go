@@ -81,7 +81,7 @@ func (s *DBStore) SetRoomState(ctx context.Context, roomID guid.Guid, state stri
 	return err
 }
 
-func (s *DBStore) CreateOrUpdateRooms(ctx context.Context, rooms []model.MatcherRoom) error {
+func (s *DBStore) CreateOrUpdateRooms(ctx context.Context, rooms []*model.MatcherRoom) error {
 	tx, err := s.conn.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -144,8 +144,8 @@ func (s *DBStore) CreateOrUpdateRooms(ctx context.Context, rooms []model.Matcher
 	return tx.Commit()
 }
 
-func (s *DBStore) LoadWaitingRooms(ctx context.Context) ([]model.MatcherRoom, error) {
-	res := make([]model.MatcherRoom, 0)
+func (s *DBStore) LoadWaitingRooms(ctx context.Context) ([]*model.MatcherRoom, error) {
+	res := make([]*model.MatcherRoom, 0)
 	var rows *sql.Rows
 
 	// одним запросом загружаем комнаты и игроков
@@ -162,7 +162,7 @@ func (s *DBStore) LoadWaitingRooms(ctx context.Context) ([]model.MatcherRoom, er
 
 	var (
 		curRoomId guid.Guid
-		room      model.MatcherRoom
+		room      *model.MatcherRoom
 		roomID    guid.Guid
 		gameID    string
 		status    string
@@ -174,7 +174,7 @@ func (s *DBStore) LoadWaitingRooms(ctx context.Context) ([]model.MatcherRoom, er
 			return nil, err
 		}
 		if curRoomId != roomID {
-			room = model.MatcherRoom{
+			room = &model.MatcherRoom{
 				ID:      roomID,
 				Players: make([]model.MatcherPlayer, 0),
 				Status:  status,

@@ -87,7 +87,7 @@ func (s *MemStore) SetRoomState(ctx context.Context, id guid.Guid, state string)
 	return nil
 }
 
-func (s *MemStore) CreateOrUpdateRooms(ctx context.Context, rooms []model.MatcherRoom) error {
+func (s *MemStore) CreateOrUpdateRooms(ctx context.Context, rooms []*model.MatcherRoom) error {
 	for _, r := range rooms {
 		if r.IsNew {
 			s.rooms[r.ID] = &MSRoom{
@@ -118,8 +118,8 @@ func (s *MemStore) CreateOrUpdateRooms(ctx context.Context, rooms []model.Matche
 	return nil
 }
 
-func (s *MemStore) LoadWaitingRooms(ctx context.Context) ([]model.MatcherRoom, error) {
-	res := make([]model.MatcherRoom, 0)
+func (s *MemStore) LoadWaitingRooms(ctx context.Context) ([]*model.MatcherRoom, error) {
+	res := make([]*model.MatcherRoom, 0)
 
 	for _, v := range s.rooms {
 		if v.Status == "wait" {
@@ -138,7 +138,7 @@ func (s *MemStore) LoadWaitingRooms(ctx context.Context) ([]model.MatcherRoom, e
 				Players: ps,
 				GameID:  v.GameID,
 			}
-			res = append(res, *r)
+			res = append(res, r)
 		}
 	}
 

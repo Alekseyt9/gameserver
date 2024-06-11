@@ -28,7 +28,7 @@ func Run(cfg *Config) {
 	}
 	pm := services.NewPlayerManager(s)
 	gm := services.NewGameManager(s, pm)
-	m, err := services.NewMatcher(s)
+	m, err := services.NewMatcher(s, pm, gm)
 	if err != nil {
 		// TODO log
 	}

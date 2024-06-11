@@ -8,6 +8,8 @@ import (
 	"gameserver/internal/services/store"
 	"sync"
 	"time"
+
+	"github.com/beevik/guid"
 )
 
 type Matcher struct {
@@ -20,7 +22,7 @@ type Matcher struct {
 
 type GameRoomGroup struct {
 	playersCount int
-	rooms        []model.MatcherRoom
+	rooms        []*model.MatcherRoom
 }
 
 type MatcherQueue struct {
@@ -68,8 +70,8 @@ func (m *Matcher) loadWaitingRooms(ctx context.Context) error {
 		rg, ok := m.rooms[r.GameID]
 		if !ok {
 			rg = &GameRoomGroup{
-				playersCount: 2, // TODO !! брать из обработчика игры
-				rooms:        make([]model.MatcherRoom, 0),
+				playersCount: m.gameManager.GetGameInfo(r.GameID).PlayerCount,
+				rooms:        make([]*model.MatcherRoom, 0),
 			}
 			m.rooms[r.GameID] = rg
 		}
@@ -102,7 +104,8 @@ func (m *Matcher) doMatching(ctx context.Context) error {
 		rg, ok := m.rooms[l.GameID]
 		if !ok {
 			rg = &GameRoomGroup{
-				rooms: make([]model.MatcherRoom, 0),
+				rooms:        make([]*model.MatcherRoom, 0),
+				playersCount: m.gameManager.GetGameInfo(l.GameID).PlayerCount,
 			}
 			m.rooms[l.GameID] = rg
 		}
@@ -111,18 +114,20 @@ func (m *Matcher) doMatching(ctx context.Context) error {
 		var wr *model.MatcherRoom
 		for _, r := range rg.rooms {
 			if len(r.Players) < rg.playersCount {
-				wr = &r
+				wr = r
 				break
 			}
 		}
 
 		if wr == nil { // создаем новую комнату
 			wr = &model.MatcherRoom{
-				Players: make([]model.MatcherPlayer, rg.playersCount),
+				ID:      *guid.New(),
+				Players: make([]model.MatcherPlayer, 0),
 				IsNew:   true,
 				Status:  "wait",
+				GameID:  l.GameID,
 			}
-			rg.rooms = append(rg.rooms, *wr)
+			rg.rooms = append(rg.rooms, wr)
 		}
 
 		wr.Players = append(wr.Players, model.MatcherPlayer{
@@ -136,7 +141,7 @@ func (m *Matcher) doMatching(ctx context.Context) error {
 	}
 
 	// сохраняем все изменения в базу
-	rooms := make([]model.MatcherRoom, 0)
+	rooms := make([]*model.MatcherRoom, 0)
 
 	for _, v := range m.rooms {
 		rooms = append(rooms, v.rooms...)
@@ -151,7 +156,7 @@ func (m *Matcher) doMatching(ctx context.Context) error {
 
 	// удаляем заполненные комнаты, сбрасываем состояние игроков
 	for g, v := range m.rooms {
-		rs := make([]model.MatcherRoom, 0)
+		rs := make([]*model.MatcherRoom, 0)
 		for _, r := range v.rooms { // создаем список комнат в ожидании и оставляем только их
 			if len(r.Players) < v.playersCount {
 				r.IsNew = false
@@ -192,7 +197,7 @@ func (m *Matcher) getStartGameMessages() []model.SendMessage {
 				for _, p := range r.Players {
 					res = append(res, model.SendMessage{
 						PlayerID: p.PlayerID,
-						Message:  createStartGameMsg(r, p, *m.gameManager.GetGameInfo(r.GameID)),
+						Message:  createStartGameMsg(*r, *m.gameManager.GetGameInfo(r.GameID)),
 					})
 				}
 			}
@@ -202,7 +207,7 @@ func (m *Matcher) getStartGameMessages() []model.SendMessage {
 	return res
 }
 
-func createStartGameMsg(r model.MatcherRoom, p model.MatcherPlayer, gi model.GameInfo) string {
+func createStartGameMsg(r model.MatcherRoom, gi model.GameInfo) string {
 	return fmt.Sprintf(`
 	{
 		"type": "room",
@@ -219,15 +224,15 @@ func createStartGameMsg(r model.MatcherRoom, p model.MatcherPlayer, gi model.Gam
 func (m *Matcher) queueToSlice() []model.RoomQuery {
 	m.queue.lock.Lock()
 	defer m.queue.lock.Unlock()
-	s := make([]model.RoomQuery, m.queue.list.Len())
+
+	s := make([]model.RoomQuery, 0, m.queue.list.Len())
 	l := m.queue.list
 
-	for e := l.Front(); e != nil; {
-		next := e.Next()
+	for e := l.Front(); e != nil; e = e.Next() {
 		s = append(s, e.Value.(model.RoomQuery))
-		l.Remove(e)
-		e = next
 	}
+
+	l.Init()
 
 	return s
 }
