@@ -56,9 +56,11 @@ func (m *RoomManager) GetOrCreateChan(roomID guid.Guid) chan model.GameMsg {
 func (m *RoomManager) processResult(gctx *GameProcessorCtx) error {
 	ctx := context.Background()
 
-	err := m.store.SetRoomState(ctx, gctx.roomID, gctx.gameState)
-	if err != nil {
-		return err
+	if gctx.gameState != "" {
+		err := m.store.SetRoomState(ctx, gctx.roomID, gctx.gameState)
+		if err != nil {
+			return err
+		}
 	}
 
 	for _, msg := range gctx.sendMessages {

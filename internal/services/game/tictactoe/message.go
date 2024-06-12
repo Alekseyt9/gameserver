@@ -8,5 +8,5 @@ type TTTMessage struct {
 
 //easyjson:json
 type TTTMoveData struct {
-	Move [2]byte `json:"move"`
+	Move []int `json:"move"`
 }

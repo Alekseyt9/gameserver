@@ -114,7 +114,7 @@ func move(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage, playerID guid.Guid
 	}
 
 	s.Field[d.Move[0]][d.Move[1]] = figureOf(s, playerID)
-	s.Turn = playerID
+	s.Turn = oppositeOf(s, playerID)
 
 	// проверить конец игры, ничью
 	if checkWin(s.Field, figureOf(s, s.Players[0])) {
@@ -137,7 +137,7 @@ func figureOf(s *TTTState, playerID guid.Guid) byte {
 	if s.Players[0] == playerID {
 		return 1
 	}
-	return 0
+	return 2
 }
 
 // противоположный игрок

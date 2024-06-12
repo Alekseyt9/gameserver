@@ -23,20 +23,22 @@ func (s *TestSuite) TestIntegration() {
 	connectToRoom(s, cookies2)
 
 	// процесс игры для 1го игрока
-	gameProcess(s, ws1, 1)
+	state1 := 0
+	gameProcess(s, ws1, 1, &state1)
 
 	// процесс игры для 2го игрока
-	gameProcess(s, ws2, 2)
+	state2 := 0
+	gameProcess(s, ws2, 2, &state2)
 
 	time.Sleep(time.Second * 60)
 }
 
 // процесс игры
-func gameProcess(s *TestSuite, ws *websocket.Conn, pNum byte) {
+func gameProcess(s *TestSuite, ws *websocket.Conn, pNum byte, state *int) {
 	t := s.T()
 
 	go func() {
-		state := 0
+		//state := 0
 
 		for {
 			_, msg, err := ws.ReadMessage()
@@ -46,7 +48,7 @@ func gameProcess(s *TestSuite, ws *websocket.Conn, pNum byte) {
 			err = m.UnmarshalJSON(msg)
 			require.NoError(t, err)
 
-			switch state {
+			switch *state {
 			case 0:
 				if m.Data.Action == "start" {
 					err = ws.WriteMessage(websocket.TextMessage, []byte(`
@@ -59,7 +61,7 @@ func gameProcess(s *TestSuite, ws *websocket.Conn, pNum byte) {
 						}					
 					`))
 					require.NoError(t, err)
-					state = 1
+					*state = 1
 					continue
 				}
 
@@ -83,7 +85,7 @@ func gameProcess(s *TestSuite, ws *websocket.Conn, pNum byte) {
 					}					
 				`))
 					require.NoError(t, err)
-					state = 2
+					*state = 2
 					continue
 				}
 
