@@ -35,7 +35,7 @@ func (m *GameManager) GetGameInfo(gameID string) *model.GameInfo {
 
 // поднимает state для пользователя+тип игры, передает в обработчик
 func (m *GameManager) Process(ctx context.Context, msg *model.GameMsg) (*GameProcessorCtx, error) {
-	if msg.MessageType != "game" {
+	if msg.Type != "game" {
 		return nil, errors.New("wrong MessageType")
 	}
 

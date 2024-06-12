@@ -77,8 +77,8 @@ func (s *DBStore) CreateOrUpdateRooms(ctx context.Context, rooms []*model.Matche
 	defer tx.Rollback() //nolint:errcheck //defer
 
 	stmtRoomInsert, err := tx.PrepareContext(ctx, `
-		insert into Rooms(Id, GameId, Status)
-		values ($1, $2, $3)
+		insert into Rooms(Id, GameId, Status, State)
+		values ($1, $2, $3, $4)
 	`)
 	if err != nil {
 		return err
@@ -87,7 +87,7 @@ func (s *DBStore) CreateOrUpdateRooms(ctx context.Context, rooms []*model.Matche
 
 	stmtRoomUpdate, err := tx.PrepareContext(ctx, `
 		update Rooms
-		set Status = $1
+		set Status = $1, State = $3
 		where Id = $2
 	`)
 	if err != nil {
@@ -106,13 +106,13 @@ func (s *DBStore) CreateOrUpdateRooms(ctx context.Context, rooms []*model.Matche
 
 	for _, r := range rooms {
 		if r.IsNew {
-			_, err = stmtRoomInsert.ExecContext(ctx, guid.New(), r.GameID, r.Status)
+			_, err = stmtRoomInsert.ExecContext(ctx, guid.New(), r.GameID, r.Status, r.State)
 			if err != nil {
 				return err
 			}
 		} else {
 			if r.StatusChanged {
-				_, err = stmtRoomUpdate.ExecContext(ctx, r.Status)
+				_, err = stmtRoomUpdate.ExecContext(ctx, r.Status, r.State)
 				if err != nil {
 					return err
 				}

@@ -82,7 +82,7 @@ func (s *MemStore) CreateOrUpdateRooms(ctx context.Context, rooms []*model.Match
 			s.rooms[r.ID] = &MSRoom{
 				ID:     r.ID,
 				GameID: r.GameID,
-				State:  "",
+				State:  r.State,
 				Status: r.Status,
 			}
 		} else {
@@ -90,6 +90,7 @@ func (s *MemStore) CreateOrUpdateRooms(ctx context.Context, rooms []*model.Match
 				old, ok := s.rooms[r.ID]
 				if ok {
 					old.Status = r.Status
+					old.State = r.State
 				}
 			}
 		}

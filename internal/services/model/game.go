@@ -11,12 +11,20 @@ type GameInfo struct {
 	TurnTimeout int    // ограничение времени на ход
 }
 
-// частично десериализованное сообщение с клиента
 type GameMsg struct {
-	MessageType string
-	PlayerID    guid.Guid
-	GameID      string
-	Data        string
+	Type     string
+	GameID   string
+	PlayerID guid.Guid
+	Data     map[string]interface{}
+}
+
+// частично десериализованное сообщение с клиента
+//
+//easyjson:json
+type InMsg struct {
+	Type   string                 `json:"type"`
+	GameID string                 `json:"gameid"`
+	Data   map[string]interface{} `json:"data"`
 }
 
 type SendMessage struct {

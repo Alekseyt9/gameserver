@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	easyjson "github.com/mailru/easyjson"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -23,20 +24,50 @@ func (s *TestSuite) TestIntegration() {
 	ws2 := createWSDial(s, cookies2)
 	connectToRoom(s, cookies2)
 
-	// ожидание ответа о старте игры по websocket
+	// процесс игры для 1го игрока
 	go func() {
+		state := 0
+
 		for {
-			_, message, err := ws1.ReadMessage()
+			_, msg, err := ws1.ReadMessage()
 			require.NoError(t, err)
-			require.True(t, string(message) != "")
+			require.True(t, string(msg) != "")
+			var m OutMessage
+			err = m.UnmarshalJSON(msg)
+			require.NoError(t, err)
+
+			switch state {
+			case 0:
+				switch m.Data.Action {
+				case "start":
+					err = ws1.WriteMessage(websocket.TextMessage, []byte(`
+						{
+							"type": "game",
+							"gameid": "tictactoe",
+							"data": { 				
+								"action": "state"
+							}
+						}					
+					`))
+					require.NoError(t, err)
+					state = 1
+					continue
+				}
+			case 1:
+			}
+
 		}
 	}()
 
+	// процесс игры для 2го игрока
 	go func() {
 		for {
-			_, message, err := ws2.ReadMessage()
+			_, msg, err := ws2.ReadMessage()
 			require.NoError(t, err)
-			require.True(t, string(message) != "")
+			require.True(t, string(msg) != "")
+			var m OutMessage
+			err = easyjson.Unmarshal(msg, &m)
+			require.NoError(t, err)
 		}
 	}()
 

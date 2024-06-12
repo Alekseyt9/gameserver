@@ -36,7 +36,7 @@ func easyjson4086215fDecodeGameserverInternalServicesGameTictactoe(in *jlexer.Le
 			continue
 		}
 		switch key {
-		case "Move":
+		case "move":
 			if in.IsNull() {
 				in.Skip()
 			} else {
@@ -57,7 +57,7 @@ func easyjson4086215fEncodeGameserverInternalServicesGameTictactoe(out *jwriter.
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"Move\":"
+		const prefix string = ",\"move\":"
 		out.RawString(prefix[1:])
 		out.Base64Bytes(in.Move[:])
 	}
@@ -106,9 +106,9 @@ func easyjson4086215fDecodeGameserverInternalServicesGameTictactoe1(in *jlexer.L
 			continue
 		}
 		switch key {
-		case "Action":
+		case "action":
 			out.Action = string(in.String())
-		case "Data":
+		case "data":
 			out.Data = string(in.String())
 		default:
 			in.SkipRecursive()
@@ -125,12 +125,12 @@ func easyjson4086215fEncodeGameserverInternalServicesGameTictactoe1(out *jwriter
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"Action\":"
+		const prefix string = ",\"action\":"
 		out.RawString(prefix[1:])
 		out.String(string(in.Action))
 	}
 	{
-		const prefix string = ",\"Data\":"
+		const prefix string = ",\"data\":"
 		out.RawString(prefix)
 		out.String(string(in.Data))
 	}

@@ -1,10 +1,12 @@
 package game
 
+//easyjson:json
 type TTTMessage struct {
-	Action string
-	Data   string
+	Action string `json:"action"`
+	Data   string `json:"data"`
 }
 
+//easyjson:json
 type TTTMoveData struct {
-	Move [2]byte
+	Move [2]byte `json:"move"`
 }

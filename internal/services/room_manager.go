@@ -120,15 +120,12 @@ func (m *RoomManager) PlayerQuit(ctx context.Context, gameID string, playerID gu
 	return nil
 }
 
-func (m *RoomManager) createQuitGameMsg(gameID string, playerID guid.Guid) model.GameMsg {
+func (m *RoomManager) createQuitGameMsg(gameID string, playerId guid.Guid) model.GameMsg {
 	return model.GameMsg{
-		MessageType: "game",
-		PlayerID:    playerID,
-		GameID:      gameID,
-		Data: `
-			{
-				"action": "quit" 
-			}`,
+		Type:     "game",
+		GameID:   gameID,
+		PlayerID: playerId,
+		Data:     map[string]interface{}{"action": "quit"},
 	}
 }
 

@@ -226,10 +226,12 @@ func createStartGameMsg(r model.MatcherRoom, gi model.GameInfo) string {
 	return fmt.Sprintf(`
 	{
 		"type": "room",
-		"game": "%s"
+		"game": "%s",
 		"data": {
-			action: "start",
-			contentLink: "%s"
+			"action": "start",
+			"data": {
+				"contentLink": "%s"
+			}			
 		}
 	}
 	`, r.GameID, gi.ContentURL)

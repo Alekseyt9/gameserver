@@ -57,10 +57,13 @@ func NewWSManager(router *gin.Engine, pm *PlayerManager, rm *RoomManager) *WebSo
 			log.Printf("Ошибка получения playerID из куки %w", err)
 		}
 
-		msg := createGameMsg(data)
+		msg, err := createGameMsg(data, *playerID)
+		if err != nil {
+			log.Printf("Ошибка создания GameMsg %w", err)
+		}
 
 		// комната уже есть, тк в игре
-		room, err := m.roomManager.GetExistingRoom(s.Request.Context(), msg.GameID, *playerID)
+		room, err := m.roomManager.GetExistingRoom(s.Request.Context(), msg.GameID, msg.PlayerID)
 		if err != nil {
 			log.Printf("Ошибка получения комнаты %w", err)
 		}
@@ -72,9 +75,18 @@ func NewWSManager(router *gin.Engine, pm *PlayerManager, rm *RoomManager) *WebSo
 	return m
 }
 
-// TODO
-func createGameMsg(data []byte) *model.GameMsg {
-	return nil
+func createGameMsg(data []byte, playerID guid.Guid) (*model.GameMsg, error) {
+	var m model.InMsg
+	err := m.UnmarshalJSON(data)
+	if err != nil {
+		return nil, err
+	}
+	return &model.GameMsg{
+		Type:     m.Type,
+		GameID:   m.GameID,
+		PlayerID: playerID,
+		Data:     m.Data,
+	}, nil
 }
 
 func getPlayerID(s *melody.Session) (*guid.Guid, error) {

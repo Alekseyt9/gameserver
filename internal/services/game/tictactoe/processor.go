@@ -65,14 +65,6 @@ func (p *TTCProcessor) Process(ctx model.ProcessorCtx, st string, msg *model.Gam
 	return nil
 }
 
-func (p *TTCProcessor) PlayerQuit(ctx model.ProcessorCtx, gameID string, playerID guid.Guid, st string) error {
-	s, err := strToState(st)
-	if err != nil {
-		return err
-	}
-
-}
-
 // создать сообщение об ошибке
 func createErrorMsg(playerID guid.Guid, s string) model.SendMessage {
 	return model.SendMessage{
@@ -236,13 +228,32 @@ func strToState(state string) (*TTTState, error) {
 }
 
 func createGameMessage(msg *model.GameMsg) (*TTTMessage, error) {
-	var res TTTMessage
-	err := res.UnmarshalJSON([]byte(msg.Data))
-	if err != nil {
-		return nil, err
-	}
+	/*
+		var res TTTMessage
+		data, err := easyjson.Marshal(msg.Data)
+		if err != nil {
+			return nil, err
+		}
+		err := res.UnmarshalJSON(data)
+		if err != nil {
+			return nil, err
+		}
+		return &res, nil
+	*/
 
-	return &res, nil
+	a, ok := msg.Data["action"]
+	d, hasData := msg.Data["data"]
+
+	if ok {
+		m := &TTTMessage{
+			Action: a.(string),
+		}
+		if hasData {
+			m.Data = d.(string)
+		}
+		return m, nil
+	}
+	return nil, nil
 }
 
 func createMoveData(s string) (*TTTMoveData, error) {
@@ -263,6 +274,8 @@ func createStateSendMsg(s *TTTState, playerID guid.Guid) (*model.SendMessage, er
 		You:     playerID,
 		State:   s.State,
 	}
+
+	// TODO обернуть !!!
 
 	json, err := ss.MarshalJSON()
 	if err != nil {
