@@ -25,17 +25,17 @@ func (s *TestSuite) TestIntegration() {
 
 	// процесс игры для 1го игрока
 	state1 := 0
-	gameProcess(s, ws1, playerID1, &state1)
+	gameProcess(s, ws1, playerID1, &state1, cookies1)
 
 	// процесс игры для 2го игрока
 	state2 := 0
-	gameProcess(s, ws2, playerID2, &state2)
+	gameProcess(s, ws2, playerID2, &state2, cookies2)
 
 	time.Sleep(time.Second * 60)
 }
 
 // процесс игры
-func gameProcess(s *TestSuite, ws *websocket.Conn, playerID *guid.Guid, state *int) {
+func gameProcess(s *TestSuite, ws *websocket.Conn, playerID *guid.Guid, state *int, cookies []*http.Cookie) {
 	t := s.T()
 
 	go func() {
@@ -91,14 +91,37 @@ func gameProcess(s *TestSuite, ws *websocket.Conn, playerID *guid.Guid, state *i
 				}
 
 			case 2:
-				var s game.TTTSendState
+				var st game.TTTSendState
 				data, err := json.Marshal(m.Data.Data)
 				require.NoError(t, err)
-				err = s.UnmarshalJSON(data)
+				err = st.UnmarshalJSON(data)
 				require.NoError(t, err)
+				quitRoom(s, cookies)
+				*state = 3
+				continue
 			}
 		}
 	}()
+}
+
+func quitRoom(s *TestSuite, cookies []*http.Cookie) {
+	ts := s.ts
+	t := s.T()
+
+	jsonValue := []byte(`{"gameID":"tictactoe"}`)
+	req, err := http.NewRequest(http.MethodPost, ts.URL+"/api/room/quit", bytes.NewBuffer(jsonValue))
+	req.Header.Set("Content-Type", "application/json")
+	require.NoError(t, err)
+	for _, cookie := range cookies {
+		req.AddCookie(cookie)
+	}
+	resp, err := ts.Client().Do(req)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+	bodyBytes, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+	bodyString := string(bodyBytes)
+	require.True(t, bodyString != "")
 }
 
 // подключение игрока к комнате

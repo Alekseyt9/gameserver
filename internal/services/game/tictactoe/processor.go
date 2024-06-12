@@ -128,6 +128,15 @@ func move(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage, playerID guid.Guid
 	}
 
 	saveState(ctx, s)
+	for _, p := range s.Players {
+		msg, err := createStateSendMsg(s, p)
+		if err != nil {
+			return err
+		}
+
+		ctx.AddSendMessage(*msg)
+	}
+
 	return nil
 }
 
@@ -200,17 +209,12 @@ func start(players []guid.Guid) (string, error) {
 }
 
 func state(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage, playerID guid.Guid) error {
-	msgs := make([]model.SendMessage, 0)
-
-	for _, p := range s.Players {
-		m, err := createStateSendMsg(s, p)
-		if err != nil {
-			return err
-		}
-		msgs = append(msgs, *m)
+	msg, err := createStateSendMsg(s, playerID)
+	if err != nil {
+		return err
 	}
 
-	ctx.AddSendMessages(msgs)
+	ctx.AddSendMessage(*msg)
 	return nil
 }
 
