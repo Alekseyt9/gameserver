@@ -34,7 +34,7 @@ type SendMessage struct {
 
 type GameProcessor interface {
 	GetInfo() *GameInfo
-	Init(players []MatcherPlayer) (string, error) // TODO guids?
+	Init(players []guid.Guid) (string, error)
 	Process(ctx ProcessorCtx, state string, msg *GameMsg) error
 }
 

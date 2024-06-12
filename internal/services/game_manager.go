@@ -6,6 +6,8 @@ import (
 	game "gameserver/internal/services/game/tictactoe"
 	"gameserver/internal/services/model"
 	"gameserver/internal/services/store"
+
+	"github.com/beevik/guid"
 )
 
 type GameManager struct {
@@ -61,7 +63,13 @@ func (m *GameManager) Init(gameID string, players []model.MatcherPlayer) (string
 	if err != nil {
 		return "", err
 	}
-	state, err := proc.Init(players)
+
+	gs := make([]guid.Guid, 0)
+	for _, p := range players {
+		gs = append(gs, p.PlayerID)
+	}
+
+	state, err := proc.Init(gs)
 	return state, err
 }
 

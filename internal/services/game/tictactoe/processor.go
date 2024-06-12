@@ -1,6 +1,7 @@
 package game
 
 import (
+	"encoding/json"
 	"fmt"
 	"gameserver/internal/services/model"
 	"math/rand"
@@ -36,7 +37,7 @@ func (p *TTCProcessor) GetInfo() *model.GameInfo {
 	}
 }
 
-func (p *TTCProcessor) Init(players []model.MatcherPlayer) (string, error) {
+func (p *TTCProcessor) Init(players []guid.Guid) (string, error) {
 	return start(players)
 }
 
@@ -53,9 +54,15 @@ func (p *TTCProcessor) Process(ctx model.ProcessorCtx, st string, msg *model.Gam
 
 	switch m.Action {
 	case "state":
-		state(ctx, s, m, msg.PlayerID)
+		err := state(ctx, s, m, msg.PlayerID)
+		if err != nil {
+			return err
+		}
 	case "move":
-		move(ctx, s, m, msg.PlayerID)
+		err := move(ctx, s, m, msg.PlayerID)
+		if err != nil {
+			return err
+		}
 	case "quit":
 		err := quit(ctx, s, msg.PlayerID)
 		if err != nil {
@@ -170,18 +177,18 @@ func quit(ctx model.ProcessorCtx, s *TTTState, playerID guid.Guid) error {
 }
 
 // создаем игроков в state, определяем первый ход
-func start(players []model.MatcherPlayer) (string, error) {
+func start(players []guid.Guid) (string, error) {
 	s := &TTTState{
 		State:  "game",
-		Turn:   players[rand.Intn(2)].PlayerID,
+		Turn:   players[rand.Intn(2)],
 		Winner: -1,
 	}
 
 	// крестик ходит первый
-	if s.Turn == players[0].PlayerID {
-		s.Players = []guid.Guid{players[0].PlayerID, players[1].PlayerID}
+	if s.Turn == players[0] {
+		s.Players = []guid.Guid{players[0], players[1]}
 	} else {
-		s.Players = []guid.Guid{players[1].PlayerID, players[0].PlayerID}
+		s.Players = []guid.Guid{players[1], players[0]}
 	}
 
 	json, err := stateToStr(s)
@@ -228,19 +235,6 @@ func strToState(state string) (*TTTState, error) {
 }
 
 func createGameMessage(msg *model.GameMsg) (*TTTMessage, error) {
-	/*
-		var res TTTMessage
-		data, err := easyjson.Marshal(msg.Data)
-		if err != nil {
-			return nil, err
-		}
-		err := res.UnmarshalJSON(data)
-		if err != nil {
-			return nil, err
-		}
-		return &res, nil
-	*/
-
 	a, ok := msg.Data["action"]
 	d, hasData := msg.Data["data"]
 
@@ -249,7 +243,11 @@ func createGameMessage(msg *model.GameMsg) (*TTTMessage, error) {
 			Action: a.(string),
 		}
 		if hasData {
-			m.Data = d.(string)
+			v, err := json.Marshal(d)
+			if err != nil {
+				return nil, err
+			}
+			m.Data = string(v)
 		}
 		return m, nil
 	}
@@ -275,8 +273,6 @@ func createStateSendMsg(s *TTTState, playerID guid.Guid) (*model.SendMessage, er
 		State:   s.State,
 	}
 
-	// TODO обернуть !!!
-
 	json, err := ss.MarshalJSON()
 	if err != nil {
 		return nil, err
@@ -284,7 +280,16 @@ func createStateSendMsg(s *TTTState, playerID guid.Guid) (*model.SendMessage, er
 
 	return &model.SendMessage{
 		PlayerID: playerID,
-		Message:  string(json),
+		Message: fmt.Sprintf(`
+		{
+			"type": "game",
+			"gameid": "tictactoe",
+			"data": {
+				"action": "state",
+				"data": %s
+			}
+		}
+		`, string(json)),
 	}, nil
 }
 

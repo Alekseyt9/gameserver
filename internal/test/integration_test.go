@@ -2,20 +2,18 @@ package test
 
 import (
 	"bytes"
+	json "encoding/json"
+	game "gameserver/internal/services/game/tictactoe"
 	"io"
 	"net/http"
 	"time"
 
 	"github.com/gorilla/websocket"
-	easyjson "github.com/mailru/easyjson"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func (s *TestSuite) TestIntegration() {
-	//ts := s.ts
-	t := s.T()
-
 	cookies1 := playerRegister(s)
 	ws1 := createWSDial(s, cookies1)
 	connectToRoom(s, cookies1)
@@ -25,11 +23,23 @@ func (s *TestSuite) TestIntegration() {
 	connectToRoom(s, cookies2)
 
 	// процесс игры для 1го игрока
+	gameProcess(s, ws1, 1)
+
+	// процесс игры для 2го игрока
+	gameProcess(s, ws2, 2)
+
+	time.Sleep(time.Second * 60)
+}
+
+// процесс игры
+func gameProcess(s *TestSuite, ws *websocket.Conn, pNum byte) {
+	t := s.T()
+
 	go func() {
 		state := 0
 
 		for {
-			_, msg, err := ws1.ReadMessage()
+			_, msg, err := ws.ReadMessage()
 			require.NoError(t, err)
 			require.True(t, string(msg) != "")
 			var m OutMessage
@@ -38,9 +48,8 @@ func (s *TestSuite) TestIntegration() {
 
 			switch state {
 			case 0:
-				switch m.Data.Action {
-				case "start":
-					err = ws1.WriteMessage(websocket.TextMessage, []byte(`
+				if m.Data.Action == "start" {
+					err = ws.WriteMessage(websocket.TextMessage, []byte(`
 						{
 							"type": "game",
 							"gameid": "tictactoe",
@@ -53,33 +62,40 @@ func (s *TestSuite) TestIntegration() {
 					state = 1
 					continue
 				}
+
 			case 1:
+				var s game.TTTSendState
+				data, err := json.Marshal(m.Data.Data)
+				require.NoError(t, err)
+				err = s.UnmarshalJSON(data)
+				require.NoError(t, err)
+				if s.Turn == s.You {
+					err = ws.WriteMessage(websocket.TextMessage, []byte(`
+					{
+						"type": "game",
+						"gameid": "tictactoe",
+						"data": { 	
+							"action":"move",
+							"data": {
+								"move": [1, 1]
+							}								
+						}
+					}					
+				`))
+					require.NoError(t, err)
+					state = 2
+					continue
+				}
+
+			case 2:
+				var s game.TTTSendState
+				data, err := json.Marshal(m.Data.Data)
+				require.NoError(t, err)
+				err = s.UnmarshalJSON(data)
+				require.NoError(t, err)
 			}
-
 		}
 	}()
-
-	// процесс игры для 2го игрока
-	go func() {
-		for {
-			_, msg, err := ws2.ReadMessage()
-			require.NoError(t, err)
-			require.True(t, string(msg) != "")
-			var m OutMessage
-			err = easyjson.Unmarshal(msg, &m)
-			require.NoError(t, err)
-		}
-	}()
-
-	time.Sleep(time.Second * 60)
-
-	// запрос состояния игры
-
-	// делаем ход
-
-	// тестим рассылку стейта игры
-
-	// отключаемся от комнаты
 }
 
 // подключение игрока к комнате
