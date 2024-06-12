@@ -47,8 +47,8 @@ func (s *DBStore) GetRoom(ctx context.Context, gameID string, playerID guid.Guid
 		SELECT r.ID, r.State
 		FROM Rooms r 
 		join RoomsPlayers rp on rp.RoomID = r.ID 
-		WHERE r.GameType = $1 and rp.ID = $2`,
-		gameID, playerID)
+		WHERE r.GameType = $1 and rp.ID = $2 and not rp.IsQuit
+		`, gameID, playerID)
 
 	var id guid.Guid
 	var state string

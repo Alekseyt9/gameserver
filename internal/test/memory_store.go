@@ -60,7 +60,7 @@ func (s *MemStore) GetRoom(ctx context.Context, gameID string, playerID guid.Gui
 
 exit:
 	for _, p := range s.roomPlayers {
-		if p.PlayerID == playerID {
+		if p.PlayerID == playerID && !p.IsQuit {
 			if s.rooms[p.RoomID].GameID == gameID {
 				r := s.rooms[p.RoomID]
 				res = &model.Room{
