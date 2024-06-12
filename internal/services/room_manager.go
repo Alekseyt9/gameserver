@@ -4,6 +4,7 @@ import (
 	"context"
 	"gameserver/internal/services/model"
 	"gameserver/internal/services/store"
+	"sync"
 
 	"github.com/beevik/guid"
 )
@@ -14,6 +15,7 @@ type RoomManager struct {
 	playerManager *PlayerManager
 	matcher       *Matcher
 	chanMap       map[guid.Guid]chan model.GameMsg
+	chanLock      sync.RWMutex
 }
 
 type PlayerConnectResult struct {
@@ -31,6 +33,9 @@ func NewRoomManager(store store.Store, gm *GameManager, pm *PlayerManager, m *Ma
 }
 
 func (m *RoomManager) GetOrCreateChan(roomID guid.Guid) chan model.GameMsg {
+	m.chanLock.Lock()
+	defer m.chanLock.Unlock()
+
 	ch, ok := m.chanMap[roomID]
 	if !ok {
 		ch = make(chan model.GameMsg, 100)
@@ -74,6 +79,9 @@ func (m *RoomManager) processResult(gctx *GameProcessorCtx) error {
 }
 
 func (m *RoomManager) DeleteChan(roomID guid.Guid) {
+	m.chanLock.Lock()
+	defer m.chanLock.Unlock()
+
 	ch, ok := m.chanMap[roomID]
 	if ok {
 		close(ch)

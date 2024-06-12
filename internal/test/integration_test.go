@@ -8,39 +8,41 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/beevik/guid"
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func (s *TestSuite) TestIntegration() {
-	cookies1 := playerRegister(s)
+	cookies1, playerID1 := playerRegister(s)
 	ws1 := createWSDial(s, cookies1)
 	connectToRoom(s, cookies1)
 
-	cookies2 := playerRegister(s)
+	cookies2, playerID2 := playerRegister(s)
 	ws2 := createWSDial(s, cookies2)
 	connectToRoom(s, cookies2)
 
 	// процесс игры для 1го игрока
 	state1 := 0
-	gameProcess(s, ws1, 1, &state1)
+	gameProcess(s, ws1, playerID1, &state1)
 
 	// процесс игры для 2го игрока
 	state2 := 0
-	gameProcess(s, ws2, 2, &state2)
+	gameProcess(s, ws2, playerID2, &state2)
 
 	time.Sleep(time.Second * 60)
 }
 
 // процесс игры
-func gameProcess(s *TestSuite, ws *websocket.Conn, pNum byte, state *int) {
+func gameProcess(s *TestSuite, ws *websocket.Conn, playerID *guid.Guid, state *int) {
 	t := s.T()
 
 	go func() {
 		//state := 0
 
 		for {
+			require.True(t, playerID != nil)
 			_, msg, err := ws.ReadMessage()
 			require.NoError(t, err)
 			require.True(t, string(msg) != "")
@@ -73,17 +75,16 @@ func gameProcess(s *TestSuite, ws *websocket.Conn, pNum byte, state *int) {
 				require.NoError(t, err)
 				if s.Turn == s.You {
 					err = ws.WriteMessage(websocket.TextMessage, []byte(`
-					{
-						"type": "game",
-						"gameid": "tictactoe",
-						"data": { 	
-							"action":"move",
-							"data": {
-								"move": [1, 1]
-							}								
-						}
-					}					
-				`))
+						{
+							"type": "game",
+							"gameid": "tictactoe",
+							"data": { 	
+								"action":"move",
+								"data": {
+									"move": [1, 1]
+								}								
+							}
+						}`))
 					require.NoError(t, err)
 					*state = 2
 					continue
@@ -137,7 +138,7 @@ func createWSDial(s *TestSuite, cookies []*http.Cookie) *websocket.Conn {
 }
 
 // регистрация пользователя
-func playerRegister(s *TestSuite) []*http.Cookie {
+func playerRegister(s *TestSuite) ([]*http.Cookie, *guid.Guid) {
 	ts := s.ts
 	t := s.T()
 
@@ -158,6 +159,8 @@ func playerRegister(s *TestSuite) []*http.Cookie {
 		}
 	}
 	require.True(t, playerID != "")
+	pID, err := guid.ParseString(playerID)
+	require.NoError(t, err)
 
-	return cookies
+	return cookies, pID
 }

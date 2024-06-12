@@ -20,7 +20,7 @@ type TestSuite struct {
 }
 
 func (suite *TestSuite) SetupSuite() {
-	s := store.NewMemStore()
+	s := NewMemStore()
 	suite.store = s
 
 	pm := services.NewPlayerManager(s)
