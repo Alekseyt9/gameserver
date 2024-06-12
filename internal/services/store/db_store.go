@@ -34,18 +34,6 @@ func NewDBStore(connString string) (Store, error) {
 	}, nil
 }
 
-func (s *DBStore) GetPlayer(ctx context.Context, id guid.Guid) (*model.Player, error) {
-	row := s.conn.QueryRowContext(ctx, `SELECT Name FROM Players WHERE Id = $1`, id)
-	var name string
-	err := row.Scan(&name)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &model.Player{ID: id, Name: name}, nil
-}
-
 func (s *DBStore) CreatePlayer(ctx context.Context, p *model.Player) error {
 	_, err := s.conn.ExecContext(ctx, `
 		insert into Players(Id, Name)
@@ -54,7 +42,7 @@ func (s *DBStore) CreatePlayer(ctx context.Context, p *model.Player) error {
 	return err
 }
 
-func (s *DBStore) GetRoom(ctx context.Context, playerID guid.Guid, gameID string) (*model.Room, error) {
+func (s *DBStore) GetRoom(ctx context.Context, gameID string, playerID guid.Guid) (*model.Room, error) {
 	row := s.conn.QueryRowContext(ctx, `
 		SELECT r.ID, r.State
 		FROM Rooms r 
@@ -196,6 +184,26 @@ func (s *DBStore) LoadWaitingRooms(ctx context.Context) ([]*model.MatcherRoom, e
 	}
 
 	return res, nil
+}
+
+func (s *DBStore) DropRoomPlayer(ctx context.Context, roomID guid.Guid, playerID guid.Guid) error {
+	tx, err := s.conn.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback() //nolint:errcheck //defer
+
+	_, err = tx.ExecContext(ctx, `
+		delete from RoomPlayers
+		where RoomId = $1 and PlayerId = $2
+	`, roomID, playerID)
+
+	// удаляем пустые комнаты
+	_, err = tx.ExecContext(ctx, `
+		delete from Room
+		where RoomId = $1 and (select count(*) from RoomPlayers where RoomId = $1) = 0`, roomID)
+
+	return tx.Commit()
 }
 
 func bootstrap(connString string) error {

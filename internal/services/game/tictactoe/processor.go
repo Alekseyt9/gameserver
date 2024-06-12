@@ -1,6 +1,7 @@
 package game
 
 import (
+	"fmt"
 	"gameserver/internal/services/model"
 	"math/rand"
 
@@ -56,7 +57,7 @@ func (p *TTCProcessor) Process(ctx model.ProcessorCtx, st string, msg *model.Gam
 	case "move":
 		move(ctx, s, m, msg.PlayerID)
 	case "quit":
-		err := quit(ctx, s, m, msg.PlayerID)
+		err := quit(ctx, s, msg.PlayerID)
 		if err != nil {
 			return err
 		}
@@ -64,9 +65,31 @@ func (p *TTCProcessor) Process(ctx model.ProcessorCtx, st string, msg *model.Gam
 	return nil
 }
 
-// TODO
+func (p *TTCProcessor) PlayerQuit(ctx model.ProcessorCtx, gameID string, playerID guid.Guid, st string) error {
+	s, err := strToState(st)
+	if err != nil {
+		return err
+	}
+
+}
+
+// создать сообщение об ошибке
 func createErrorMsg(playerID guid.Guid, s string) model.SendMessage {
-	return model.SendMessage{}
+	return model.SendMessage{
+		PlayerID: playerID,
+		Message: fmt.Sprintf(`
+		{
+			"type": "game",
+			"game": "tictactoe",
+			"data": { 
+				"action": "error",
+				"data": {
+					"message": "%s"
+				}
+			}
+		}
+		`, s),
+	}
 }
 
 // сделать ход
@@ -137,7 +160,7 @@ func indexOf(s *TTTState, playerID guid.Guid) int {
 }
 
 // игрок покинул комнату
-func quit(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage, playerID guid.Guid) error {
+func quit(ctx model.ProcessorCtx, s *TTTState, playerID guid.Guid) error {
 	if len(s.Players) == 2 {
 		winner := oppositeOf(s, playerID)
 		s.Winner = indexOf(s, winner)
@@ -222,7 +245,6 @@ func createGameMessage(msg *model.GameMsg) (*TTTMessage, error) {
 	return &res, nil
 }
 
-// TODO
 func createMoveData(s string) (*TTTMoveData, error) {
 	var res TTTMoveData
 	err := res.UnmarshalJSON([]byte(s))

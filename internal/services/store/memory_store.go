@@ -39,17 +39,6 @@ func NewMemStore() *MemStore {
 	}
 }
 
-func (s *MemStore) GetPlayer(ctx context.Context, id guid.Guid) (*model.Player, error) {
-	v, ok := s.players[id]
-	if ok {
-		return &model.Player{
-			ID:   v.ID,
-			Name: v.Name,
-		}, nil
-	}
-	return nil, nil
-}
-
 func (s *MemStore) CreatePlayer(ctx context.Context, p *model.Player) error {
 	s.players[p.ID] = &MSPlayer{
 		ID:   p.ID,
@@ -58,7 +47,7 @@ func (s *MemStore) CreatePlayer(ctx context.Context, p *model.Player) error {
 	return nil
 }
 
-func (s *MemStore) GetRoom(ctx context.Context, playerID guid.Guid, gameID string) (*model.Room, error) {
+func (s *MemStore) GetRoom(ctx context.Context, gameID string, playerID guid.Guid) (*model.Room, error) {
 	var res *model.Room
 
 exit:
@@ -143,4 +132,30 @@ func (s *MemStore) LoadWaitingRooms(ctx context.Context) ([]*model.MatcherRoom, 
 	}
 
 	return res, nil
+}
+
+func (s *MemStore) DropRoomPlayer(ctx context.Context, roomID guid.Guid, playerID guid.Guid) error {
+	_, ok := s.rooms[roomID]
+	if ok {
+		prs := make([]MSRoomPlayer, 0)
+		for _, p := range s.roomPlayers {
+			if !(p.PlayerID == playerID && p.RoomID == roomID) {
+				prs = append(prs, p)
+			}
+		}
+		s.roomPlayers = prs
+
+		// удаляем комнату, если она пустая
+		hasPlayers := false
+		for _, p := range s.roomPlayers {
+			if p.RoomID == roomID {
+				hasPlayers = true
+			}
+		}
+		if !hasPlayers {
+			delete(s.rooms, roomID)
+		}
+	}
+
+	return nil
 }

@@ -82,7 +82,7 @@ func (m *RoomManager) DeleteChan(roomID guid.Guid) {
 // подключение к существующей комнате или создание комнаты
 // подключаться нужно каждый раз при коннекте игрока
 func (m *RoomManager) PlayerConnect(ctx context.Context, playerID guid.Guid, gameID string) (*PlayerConnectResult, error) {
-	room, err := m.GetExistingRoom(ctx, playerID, gameID)
+	room, err := m.GetExistingRoom(ctx, gameID, playerID)
 	if err != nil {
 		return nil, err
 	}
@@ -101,12 +101,39 @@ func (m *RoomManager) PlayerConnect(ctx context.Context, playerID guid.Guid, gam
 }
 
 // выход из комнаты (выйти можно только один раз)
-func (m *RoomManager) PlayerQuit(msg *model.GameMsg) {
+func (m *RoomManager) PlayerQuit(ctx context.Context, gameID string, playerID guid.Guid) error {
+	room, err := m.GetExistingRoom(ctx, gameID, playerID)
+	if err != nil {
+		return err
+	}
+	ch := m.GetOrCreateChan(room.ID)
 
+	// чтобы стейт игры не перезаписывался - в игру событие передаем через канал
+	ch <- m.createQuitGameMsg(gameID, playerID)
+
+	// TODO удаление игрока/ комнаты (если все игроки вышли); одной командой в стор
+	err = m.store.DropRoomPlayer(ctx, room.ID, playerID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func (m *RoomManager) GetExistingRoom(ctx context.Context, playerID guid.Guid, gameID string) (*model.Room, error) {
-	r, err := m.store.GetRoom(ctx, playerID, gameID)
+func (m *RoomManager) createQuitGameMsg(gameID string, playerID guid.Guid) model.GameMsg {
+	return model.GameMsg{
+		MessageType: "game",
+		PlayerID:    playerID,
+		GameID:      gameID,
+		Data: `
+			{
+				"action": "quit" 
+			}`,
+	}
+}
+
+func (m *RoomManager) GetExistingRoom(ctx context.Context, gameID string, playerID guid.Guid) (*model.Room, error) {
+	r, err := m.store.GetRoom(ctx, gameID, playerID)
 	if err != nil {
 		return nil, err
 	}

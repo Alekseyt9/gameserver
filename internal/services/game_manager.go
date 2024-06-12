@@ -39,7 +39,7 @@ func (m *GameManager) Process(ctx context.Context, msg *model.GameMsg) (*GamePro
 		return nil, errors.New("wrong MessageType")
 	}
 
-	room, err := m.store.GetRoom(ctx, msg.PlayerID, msg.GameID)
+	room, err := m.store.GetRoom(ctx, msg.GameID, msg.PlayerID)
 	if err != nil {
 		return nil, err
 	}

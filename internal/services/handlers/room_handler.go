@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type ConnectRoomRequest struct {
+type RoomRequest struct {
 	GameID string `json:"gameID" binding:"required"`
 }
 
@@ -24,7 +24,7 @@ func (h *Handler) ConnectRoom(c *gin.Context) {
 		// TODO
 	}
 
-	var req ConnectRoomRequest
+	var req RoomRequest
 	if err := c.BindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
@@ -36,7 +36,6 @@ func (h *Handler) ConnectRoom(c *gin.Context) {
 		return
 	}
 
-	// TODO
 	c.JSON(http.StatusOK, gin.H{
 		"message": conRes.State,
 	})
@@ -44,17 +43,31 @@ func (h *Handler) ConnectRoom(c *gin.Context) {
 
 func (h *Handler) QuitRoom(c *gin.Context) {
 	// TODO вынести в middleware
-	playerID, err := c.Cookie("playerID")
+	plID, err := c.Cookie("playerID")
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "PlayerID cookie not found"})
 		return
 	}
 
-	// TODO
-	// здесь (если комната в игре) - посылаем начало игры с контентом
-	// или в очередь на матчинг - возвращаем wait
+	var req RoomRequest
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	playerID, err := guid.ParseString(plID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err = h.roomManager.PlayerQuit(c.Request.Context(), req.GameID, *playerID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"message":  "Connected to room successfully",
-		"playerID": playerID,
+		"message": "Quit room successfully",
 	})
 }

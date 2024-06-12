@@ -60,7 +60,7 @@ func NewWSManager(router *gin.Engine, pm *PlayerManager, rm *RoomManager) *WebSo
 		msg := createGameMsg(data)
 
 		// комната уже есть, тк в игре
-		room, err := m.roomManager.GetExistingRoom(s.Request.Context(), *playerID, msg.GameID)
+		room, err := m.roomManager.GetExistingRoom(s.Request.Context(), msg.GameID, *playerID)
 		if err != nil {
 			log.Printf("Ошибка получения комнаты %w", err)
 		}
@@ -68,8 +68,6 @@ func NewWSManager(router *gin.Engine, pm *PlayerManager, rm *RoomManager) *WebSo
 		ch := m.roomManager.GetOrCreateChan(room.ID)
 		ch <- *msg
 	})
-
-	//router.Run(url)
 
 	return m
 }
