@@ -20,4 +20,5 @@ type TTTSendState struct {
 	Turn    guid.Guid    `json:"turn"`
 	You     guid.Guid    `json:"you"`
 	State   string       `json:"state"`
+	Winner  int          `json:"winner"`
 }

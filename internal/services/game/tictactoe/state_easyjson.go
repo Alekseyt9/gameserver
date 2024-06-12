@@ -259,6 +259,8 @@ func easyjsonBd887cf1DecodeGameserverInternalServicesGameTictactoe1(in *jlexer.L
 			}
 		case "state":
 			out.State = string(in.String())
+		case "winner":
+			out.Winner = int(in.Int())
 		default:
 			in.SkipRecursive()
 		}
@@ -315,6 +317,11 @@ func easyjsonBd887cf1EncodeGameserverInternalServicesGameTictactoe1(out *jwriter
 		const prefix string = ",\"state\":"
 		out.RawString(prefix)
 		out.String(string(in.State))
+	}
+	{
+		const prefix string = ",\"winner\":"
+		out.RawString(prefix)
+		out.Int(int(in.Winner))
 	}
 	out.RawByte('}')
 }

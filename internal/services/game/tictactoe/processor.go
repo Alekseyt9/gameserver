@@ -275,6 +275,7 @@ func createStateSendMsg(s *TTTState, playerID guid.Guid) (*model.SendMessage, er
 		Turn:    s.Turn,
 		You:     playerID,
 		State:   s.State,
+		Winner:  s.Winner,
 	}
 
 	json, err := ss.MarshalJSON()
