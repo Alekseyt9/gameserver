@@ -186,7 +186,7 @@ func (s *DBStore) LoadWaitingRooms(ctx context.Context) ([]*model.MatcherRoom, e
 	return res, nil
 }
 
-func (s *DBStore) DropRoomPlayer(ctx context.Context, roomID guid.Guid, playerID guid.Guid) error {
+func (s *DBStore) MarkDropRoomPlayer(ctx context.Context, roomID guid.Guid, playerID guid.Guid) error {
 	tx, err := s.conn.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -194,14 +194,17 @@ func (s *DBStore) DropRoomPlayer(ctx context.Context, roomID guid.Guid, playerID
 	defer tx.Rollback() //nolint:errcheck //defer
 
 	_, err = tx.ExecContext(ctx, `
-		delete from RoomPlayers
+		update RoomPlayers
+		set IsQuit = true
 		where RoomId = $1 and PlayerId = $2
 	`, roomID, playerID)
 
-	// удаляем пустые комнаты
-	_, err = tx.ExecContext(ctx, `
-		delete from Room
-		where RoomId = $1 and (select count(*) from RoomPlayers where RoomId = $1) = 0`, roomID)
+	/*
+		// удаляем пустые комнаты
+		_, err = tx.ExecContext(ctx, `
+			delete from Room
+			where RoomId = $1 and (select count(*) from RoomPlayers where RoomId = $1) = 0`, roomID)
+	*/
 
 	return tx.Commit()
 }

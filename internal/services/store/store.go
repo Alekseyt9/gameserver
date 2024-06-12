@@ -15,7 +15,13 @@ type Store interface {
 
 	GetRoom(ctx context.Context, gameID string, playerID guid.Guid) (*model.Room, error)
 	SetRoomState(ctx context.Context, id guid.Guid, state string) error
-	DropRoomPlayer(ctx context.Context, roomID guid.Guid, playerID guid.Guid) error
+
+	// помечаем игрока комнаты на удаление
+	MarkDropRoomPlayer(ctx context.Context, roomID guid.Guid, playerID guid.Guid) error
+
+	// создаем/обновляем комнаты после матчинга
 	CreateOrUpdateRooms(ctx context.Context, rooms []*model.MatcherRoom) error
+
+	// загружаем комнаты в ожидании игроков
 	LoadWaitingRooms(ctx context.Context) ([]*model.MatcherRoom, error)
 }

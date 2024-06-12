@@ -31,6 +31,7 @@ type MSPlayer struct {
 type MSRoomPlayer struct {
 	PlayerID guid.Guid
 	RoomID   guid.Guid
+	IsQuit   bool
 }
 
 func NewMemStore() *MemStore {
@@ -151,31 +152,38 @@ func (s *MemStore) LoadWaitingRooms(ctx context.Context) ([]*model.MatcherRoom, 
 	return res, nil
 }
 
-func (s *MemStore) DropRoomPlayer(ctx context.Context, roomID guid.Guid, playerID guid.Guid) error {
+func (s *MemStore) MarkDropRoomPlayer(ctx context.Context, roomID guid.Guid, playerID guid.Guid) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	_, ok := s.rooms[roomID]
-	if ok {
-		prs := make([]MSRoomPlayer, 0)
-		for _, p := range s.roomPlayers {
-			if !(p.PlayerID == playerID && p.RoomID == roomID) {
-				prs = append(prs, p)
-			}
-		}
-		s.roomPlayers = prs
-
-		// удаляем комнату, если она пустая
-		hasPlayers := false
-		for _, p := range s.roomPlayers {
-			if p.RoomID == roomID {
-				hasPlayers = true
-			}
-		}
-		if !hasPlayers {
-			delete(s.rooms, roomID)
+	for _, r := range s.roomPlayers {
+		if r.RoomID == roomID && r.PlayerID == playerID {
+			r.IsQuit = true
 		}
 	}
+
+	/*
+		_, ok := s.rooms[roomID]
+		if ok {
+			prs := make([]MSRoomPlayer, 0)
+			for _, p := range s.roomPlayers {
+				if !(p.PlayerID == playerID && p.RoomID == roomID) {
+					prs = append(prs, p)
+				}
+			}
+			s.roomPlayers = prs
+
+			// удаляем комнату, если она пустая
+			hasPlayers := false
+			for _, p := range s.roomPlayers {
+				if p.RoomID == roomID {
+					hasPlayers = true
+				}
+			}
+			if !hasPlayers {
+				delete(s.rooms, roomID)
+			}
+		}*/
 
 	return nil
 }

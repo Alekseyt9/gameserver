@@ -7,7 +7,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
@@ -15,7 +14,6 @@ import (
 type TestSuite struct {
 	suite.Suite
 	ts    *httptest.Server
-	ws    *websocket.Conn
 	store store.Store
 }
 
@@ -38,7 +36,6 @@ func (suite *TestSuite) SetupSuite() {
 
 func (suite *TestSuite) TearDownSuite() {
 	suite.ts.Close()
-	suite.ws.Close()
 }
 
 func TestRouterSuite(t *testing.T) {

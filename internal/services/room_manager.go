@@ -121,13 +121,11 @@ func (m *RoomManager) PlayerQuit(ctx context.Context, gameID string, playerID gu
 	// чтобы стейт игры не перезаписывался - в игру событие передаем через канал
 	ch <- m.createQuitGameMsg(gameID, playerID)
 
-	/* TODO игрок удаляется быстрее, чем обрабатывается игра
-	// удаление игрока/ комнаты (если все игроки вышли); одной командой в стор
-	err = m.store.DropRoomPlayer(ctx, room.ID, playerID)
+	// помечаем игроков, которые вышли
+	err = m.store.MarkDropRoomPlayer(ctx, room.ID, playerID)
 	if err != nil {
 		return err
 	}
-	*/
 
 	return nil
 }
