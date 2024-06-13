@@ -1,3 +1,4 @@
 /cmd/server/*.exe
 /internal/services/*.exe
 /internal/test/*.exe
+/.vscode/launch.json

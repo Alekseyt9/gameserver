@@ -1,6 +1,10 @@
 package main
 
-import "gameserver/internal/run"
+import (
+	"gameserver/internal/run"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
+)
 
 type PageData struct {
 	WebSocketURL string
@@ -8,5 +12,8 @@ type PageData struct {
 
 func main() {
 	cfg := &run.Config{}
-	run.Run(cfg)
+	err := run.Run(cfg)
+	if err != nil {
+		panic("Ошибка запуска сервера: " + err.Error())
+	}
 }

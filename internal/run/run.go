@@ -18,28 +18,31 @@ type PageData struct {
 }
 
 type Config struct {
-	ConnectionString string
+	Address     string `env:"ADDRESS"`
+	DataBaseDSN string `env:"DATABASE_DSN"`
 }
 
-func Run(cfg *Config) {
-	s, err := store.NewDBStore(cfg.ConnectionString)
+func Run(cfg *Config) error {
+	s, err := store.NewDBStore(cfg.DataBaseDSN)
 	if err != nil {
-		// TODO log
+		return err
 	}
 	pm := services.NewPlayerManager(s)
 	gm := services.NewGameManager(s, pm)
 	m, err := services.NewMatcher(s, pm, gm)
 	if err != nil {
-		// TODO log
+		return err
 	}
 	rm := services.NewRoomManager(s, gm, pm, m)
 
 	r := Router(s, pm, rm, cfg)
 
+	// TODO из командной строки или переменной окружения
 	err = r.Run(":8080")
 	if err != nil {
-		panic("Ошибка запуска сервера: " + err.Error())
+		return err
 	}
+	return nil
 }
 
 func Router(s store.Store, pm *services.PlayerManager, rm *services.RoomManager, cfg *Config) *gin.Engine {
@@ -74,7 +77,7 @@ func setupFileServer(r *gin.Engine) {
 
 		// TODO задавать базовый адрес из командной строки
 		data := PageData{
-			WebSocketURL: "ws://localhost:3001/ws",
+			WebSocketURL: "ws://localhost:8080/ws",
 		}
 		c.Writer.Header().Set("Content-Type", "text/html")
 		tmpl.Execute(c.Writer, data)
