@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Ожидание игроков</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+    <link rel="stylesheet" href="../pico.min.css">
     <style>
         body {
             background-color: black;
@@ -25,5 +25,20 @@
     <main class="container">
         <h1>Ожидание игроков</h1>
     </main>
+
+    <script>
+        const gm = window.parent.gm;
+        gm.Connect("tictactoe")
+            .then((x) => { 
+                console.log(x);
+                if (x.state == "game"){
+                    gm.SetContent(x.contentLink);
+                }
+            })
+            .catch(error => {
+                console.error('An error occurred:', error);
+            });
+    </script>
+
 </body>
 </html>

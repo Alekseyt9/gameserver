@@ -36,9 +36,13 @@ func (h *Handler) ConnectRoom(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": conRes.State,
-	})
+	a := make(map[string]any, 0)
+	a["state"] = conRes.State
+	if conRes.State == "game" {
+		a["contentLink"] = conRes.ContentLink
+	}
+
+	c.JSON(http.StatusOK, a)
 }
 
 func (h *Handler) QuitRoom(c *gin.Context) {

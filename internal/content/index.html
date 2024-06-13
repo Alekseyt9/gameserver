@@ -196,7 +196,7 @@
         document.querySelector('.game-tile').addEventListener('click', function() {
             document.getElementById('modal').style.display = 'flex';
             document.body.classList.add('modal-open');
-            //document.getElementById('game-iframe').src = 'content/matching/index.html';
+            document.getElementById('game-iframe').src = 'content/matching/index.html';
             //document.getElementById('game-iframe').src = 'content/games/tictactoe/index.html';
         });
 
@@ -220,35 +220,51 @@
                     if (response.ok) {
                         console.log('Player registered successfully');
                     } else {
-                        console.error('Failed to register player');
+                        console.error('Failed to register player:', errorText);
                     }
                 } catch (error) {
                     console.error('Error during registration:', error);
                 }
             }
 
-            async Connect() {
+            async Connect(gameID) {
                 try {
                     const response = await fetch('/api/room/connect', {
                         method: 'POST',
-                        credentials: 'include' 
+                        credentials: 'include',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            gameID: gameID
+                        })
                     });
 
                     if (response.ok) {
-                        console.log('Connected to room successfully');
+                        const data = await response.json();
+                        console.log('Player connect successfully', data);
+                        return data; 
                     } else {
-                        console.error('Failed to connect to room');
+                        const errorText = await response.text();
+                        console.error('Failed to connect player:', errorText);
+                        throw new Error(errorText);
                     }
                 } catch (error) {
                     console.error('Error during connection:', error);
                 }
             }
 
-            async Quit() {
+            async Quit(gameID) {
                 try {
                     const response = await fetch('/api/room/quit', {
                         method: 'POST',
-                        credentials: 'include' 
+                        credentials: 'include',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            gameID: gameID
+                        })
                     });
 
                     if (response.ok) {
@@ -261,6 +277,9 @@
                 }
             }
 
+            SetContent(url) {
+                document.getElementById('game-iframe').src = url;
+            }
         }
 
         class WebSocketManager {

@@ -19,7 +19,8 @@ type RoomManager struct {
 }
 
 type PlayerConnectResult struct {
-	State string
+	State       string
+	ContentLink string
 }
 
 func NewRoomManager(store store.Store, gm *GameManager, pm *PlayerManager, m *Matcher) *RoomManager {
@@ -99,7 +100,10 @@ func (m *RoomManager) PlayerConnect(ctx context.Context, playerID uuid.UUID, gam
 
 	if room != nil && room.Status == "game" {
 		// комната в игре есть - стартуем игру
-		return &PlayerConnectResult{State: "game"}, nil
+		return &PlayerConnectResult{
+			State:       "game",
+			ContentLink: m.gameManager.GetGameInfo(gameID).ContentURL,
+		}, nil
 	} else {
 		// ставим в очередь в матчмейкинг
 		m.matcher.CheckAndAdd(model.RoomQuery{

@@ -42,18 +42,36 @@ func (s *DBStore) CreatePlayer(ctx context.Context, p *model.Player) error {
 	return err
 }
 
+func (s *DBStore) GetPlayer(ctx context.Context, playerID uuid.UUID) (*model.Player, error) {
+	row := s.conn.QueryRowContext(ctx, `SELECT Name FROM Players WHERE Id = $1`, playerID)
+	var name string
+	err := row.Scan(&name)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.Player{
+		ID:   playerID,
+		Name: name,
+	}, nil
+}
+
 func (s *DBStore) GetRoom(ctx context.Context, gameID string, playerID uuid.UUID) (*model.Room, error) {
 	row := s.conn.QueryRowContext(ctx, `
-		SELECT r.ID, r.State
+		SELECT r.Id, r.State
 		FROM Rooms r 
-		join RoomsPlayers rp on rp.RoomID = r.ID 
-		WHERE r.GameType = $1 and rp.ID = $2 and not rp.IsQuit
+		join RoomPlayers rp on rp.RoomID = r.Id 
+		WHERE r.GameId = $1 and rp.PlayerId = $2 and not rp.IsQuit
 		`, gameID, playerID)
 
 	var id uuid.UUID
 	var state string
 	err := row.Scan(&id, &state)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
 		return nil, err
 	}
 

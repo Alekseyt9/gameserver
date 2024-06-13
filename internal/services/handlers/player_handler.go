@@ -10,6 +10,23 @@ import (
 )
 
 func (h *Handler) RegisterPlayer(c *gin.Context) {
+	pID, err := c.Cookie("playerID")
+	if pID != "" {
+		playerID, err := uuid.Parse(pID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "uuid.Parse"})
+		}
+		player, err := h.store.GetPlayer(c.Request.Context(), playerID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "store.GetPlayer"})
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"playerName": player.Name,
+			"playerID":   player.ID.String(),
+		})
+	}
+
 	player := model.Player{
 		ID:   uuid.New(),
 		Name: "player" + h.generateRandomString(5),
@@ -19,7 +36,7 @@ func (h *Handler) RegisterPlayer(c *gin.Context) {
 	c.SetCookie("playerID", player.ID.String(), maxAge,
 		"/", "", false, true)
 
-	err := h.store.CreatePlayer(c.Request.Context(), &player)
+	err = h.store.CreatePlayer(c.Request.Context(), &player)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "create user in DB"})
 	}

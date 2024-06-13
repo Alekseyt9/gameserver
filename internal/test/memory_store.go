@@ -42,6 +42,20 @@ func NewMemStore() *MemStore {
 	}
 }
 
+func (s *MemStore) GetPlayer(ctx context.Context, playerID uuid.UUID) (*model.Player, error) {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+
+	p, ok := s.players[playerID]
+	if ok {
+		return &model.Player{
+			ID:   p.ID,
+			Name: p.Name,
+		}, nil
+	}
+	return nil, nil
+}
+
 func (s *MemStore) CreatePlayer(ctx context.Context, p *model.Player) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
