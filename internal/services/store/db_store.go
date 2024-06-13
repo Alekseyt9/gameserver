@@ -216,13 +216,9 @@ func (s *DBStore) MarkDropRoomPlayer(ctx context.Context, roomID uuid.UUID, play
 		set IsQuit = true
 		where RoomId = $1 and PlayerId = $2
 	`, roomID, playerID)
-
-	/*
-		// удаляем пустые комнаты
-		_, err = tx.ExecContext(ctx, `
-			delete from Room
-			where RoomId = $1 and (select count(*) from RoomPlayers where RoomId = $1) = 0`, roomID)
-	*/
+	if err != nil {
+		return err
+	}
 
 	return tx.Commit()
 }

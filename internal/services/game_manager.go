@@ -35,7 +35,7 @@ func (m *GameManager) GetGameInfo(gameID string) *model.GameInfo {
 	return nil
 }
 
-// поднимает state для пользователя+тип игры, передает в обработчик
+// поднимает state для пользователя+тип игры, передает в обработчик.
 func (m *GameManager) Process(ctx context.Context, msg *model.GameMsg) (*GameProcessorCtx, error) {
 	if msg.Type != "game" {
 		return nil, errors.New("wrong MessageType")
@@ -46,18 +46,22 @@ func (m *GameManager) Process(ctx context.Context, msg *model.GameMsg) (*GamePro
 		return nil, err
 	}
 
-	proc, err := m.getProcessor(msg.GameID)
+	var proc model.GameProcessor
+	proc, err = m.getProcessor(msg.GameID)
 	if err != nil {
 		return nil, err
 	}
 
 	procCtx := NewGameProcessorCtx(room.ID, msg.GameID)
-	proc.Process(procCtx, room.State, msg)
+	err = proc.Process(procCtx, room.State, msg)
+	if err != nil {
+		return nil, err
+	}
 
 	return procCtx, nil
 }
 
-// инициализация игры
+// инициализация игры.
 func (m *GameManager) Init(gameID string, players []*model.MatcherPlayer) (string, error) {
 	proc, err := m.getProcessor(gameID)
 	if err != nil {

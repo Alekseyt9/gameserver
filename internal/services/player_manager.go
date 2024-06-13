@@ -21,7 +21,7 @@ func NewPlayerManager(store store.Store) *PlayerManager {
 	}
 }
 
-// получить канал для свази с игроком
+// получить канал для свази с игроком.
 func (m *PlayerManager) GetOrCreateChan(palyerID uuid.UUID) chan model.SendMessage {
 	m.chanLock.Lock()
 	defer m.chanLock.Unlock()
@@ -34,7 +34,7 @@ func (m *PlayerManager) GetOrCreateChan(palyerID uuid.UUID) chan model.SendMessa
 	return ch
 }
 
-// получить канал для свази с игроком
+// получить канал для свази с игроком.
 func (m *PlayerManager) GetChan(palyerID uuid.UUID) *chan model.SendMessage {
 	m.chanLock.RLock()
 	defer m.chanLock.RUnlock()
@@ -46,7 +46,7 @@ func (m *PlayerManager) GetChan(palyerID uuid.UUID) *chan model.SendMessage {
 	return &ch
 }
 
-// удалить канал для свзяи с игроком
+// удалить канал для свзяи с игроком.
 func (m *PlayerManager) DeleteChan(palyerID uuid.UUID) {
 	m.chanLock.Lock()
 	defer m.chanLock.Unlock()

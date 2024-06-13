@@ -20,9 +20,12 @@ var directions = [][2]int{
 }
 
 const (
-	size     = 15
-	empty    = 0
-	winCount = 5
+	size        = 15
+	empty       = 0
+	winCount    = 5
+	playerCount = 2
+	turnTimeout = 60 * 5
+	contentURL  = "/content/games/tictactoe/index.html"
 )
 
 func New() model.GameProcessor {
@@ -31,9 +34,9 @@ func New() model.GameProcessor {
 
 func (p *TTCProcessor) GetInfo() *model.GameInfo {
 	return &model.GameInfo{
-		PlayerCount: 2,
-		ContentURL:  "/content/games/tictactoe/index.html",
-		TurnTimeout: 60 * 5,
+		PlayerCount: playerCount,
+		ContentURL:  contentURL,
+		TurnTimeout: turnTimeout,
 	}
 }
 
@@ -54,17 +57,17 @@ func (p *TTCProcessor) Process(ctx model.ProcessorCtx, st string, msg *model.Gam
 
 	switch m.Action {
 	case "state":
-		err := state(ctx, s, m, msg.PlayerID)
+		err = state(ctx, s, m, msg.PlayerID)
 		if err != nil {
 			return err
 		}
 	case "move":
-		err := move(ctx, s, m, msg.PlayerID)
+		err = move(ctx, s, m, msg.PlayerID)
 		if err != nil {
 			return err
 		}
 	case "quit":
-		err := quit(ctx, s, msg.PlayerID)
+		err = quit(ctx, s, msg.PlayerID)
 		if err != nil {
 			return err
 		}
@@ -137,7 +140,8 @@ func move(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage, playerID uuid.UUID
 
 	saveState(ctx, s)
 	for _, p := range s.Players {
-		msg, err := createStateSendMsg(s, p)
+		var msg *model.SendMessage
+		msg, err = createStateSendMsg(s, p)
 		if err != nil {
 			return err
 		}

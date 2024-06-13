@@ -16,11 +16,14 @@ func (h *Handler) RegisterPlayer(c *gin.Context) {
 	}
 
 	if pID != "" {
-		playerID, err := uuid.Parse(pID)
+		var playerID uuid.UUID
+		playerID, err = uuid.Parse(pID)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "uuid.Parse"})
 		}
-		player, err := h.store.GetPlayer(c.Request.Context(), playerID)
+
+		var player *model.Player
+		player, err = h.store.GetPlayer(c.Request.Context(), playerID)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "store.GetPlayer"})
 		}

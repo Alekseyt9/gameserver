@@ -36,7 +36,10 @@ func NewWSManager(router *gin.Engine, pm *PlayerManager, rm *RoomManager) *WebSo
 
 		go func() {
 			for msg := range sendCh {
-				s.Write([]byte(msg.Message))
+				err = s.Write([]byte(msg.Message))
+				if err != nil {
+					log.Printf("failed to write message: %v", err)
+				}
 			}
 		}()
 	})

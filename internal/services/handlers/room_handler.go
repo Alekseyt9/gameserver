@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"gameserver/internal/services"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -25,12 +26,13 @@ func (h *Handler) ConnectRoom(c *gin.Context) {
 	}
 
 	var req RoomRequest
-	if err := c.BindJSON(&req); err != nil {
+	if err = c.BindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
 
-	conRes, err := h.roomManager.PlayerConnect(c.Request.Context(), playerID, req.GameID)
+	var conRes *services.PlayerConnectResult
+	conRes, err = h.roomManager.PlayerConnect(c.Request.Context(), playerID, req.GameID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "PlayerConnect"})
 		return
@@ -54,12 +56,13 @@ func (h *Handler) QuitRoom(c *gin.Context) {
 	}
 
 	var req RoomRequest
-	if err := c.BindJSON(&req); err != nil {
+	if err = c.BindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
 
-	playerID, err := uuid.Parse(plID)
+	var playerID uuid.UUID
+	playerID, err = uuid.Parse(plID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

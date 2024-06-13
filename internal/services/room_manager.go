@@ -4,6 +4,7 @@ import (
 	"context"
 	"gameserver/internal/services/model"
 	"gameserver/internal/services/store"
+	"log"
 	"sync"
 
 	"github.com/google/uuid"
@@ -23,6 +24,10 @@ type PlayerConnectResult struct {
 	ContentLink string
 }
 
+const (
+	chanBuffer = 100
+)
+
 func NewRoomManager(store store.Store, gm *GameManager, pm *PlayerManager, m *Matcher) *RoomManager {
 	return &RoomManager{
 		store:         store,
@@ -39,18 +44,22 @@ func (m *RoomManager) GetOrCreateChan(roomID uuid.UUID) chan model.GameMsg {
 
 	ch, ok := m.chanMap[roomID]
 	if !ok {
-		ch = make(chan model.GameMsg, 100)
+		ch = make(chan model.GameMsg, chanBuffer)
 		m.chanMap[roomID] = ch
 
-		// создаем воркер для комнаты
+		// создаем воркер для комнаты.
 		go func() {
 			ctx := context.Background()
 			for msg := range ch {
 				gctx, err := m.gameManager.Process(ctx, &msg)
 				if err != nil {
-					//TODO log
+					log.Printf("m.gameManager.Process error: %v", err)
 				}
-				m.processResult(gctx)
+
+				err = m.processResult(gctx)
+				if err != nil {
+					log.Printf("m.processResult error: %v", err)
+				}
 			}
 		}()
 	}
@@ -58,7 +67,7 @@ func (m *RoomManager) GetOrCreateChan(roomID uuid.UUID) chan model.GameMsg {
 	return ch
 }
 
-// сохранение стейта игры, рассылка сообщений
+// сохранение стейта игры, рассылка сообщений.
 func (m *RoomManager) processResult(gctx *GameProcessorCtx) error {
 	ctx := context.Background()
 
@@ -90,8 +99,8 @@ func (m *RoomManager) DeleteChan(roomID uuid.UUID) {
 	}
 }
 
-// подключение к существующей комнате или создание комнаты
-// подключаться нужно каждый раз при коннекте игрока
+// подключение к существующей комнате или создание комнаты.
+// подключаться нужно каждый раз при коннекте игрока.
 func (m *RoomManager) PlayerConnect(ctx context.Context, playerID uuid.UUID, gameID string) (*PlayerConnectResult, error) {
 	room, err := m.GetExistingRoom(ctx, gameID, playerID)
 	if err != nil {
@@ -99,13 +108,13 @@ func (m *RoomManager) PlayerConnect(ctx context.Context, playerID uuid.UUID, gam
 	}
 
 	if room != nil && room.Status == "game" {
-		// комната в игре есть - стартуем игру
+		// комната в игре есть - стартуем игру.
 		return &PlayerConnectResult{
 			State:       "game",
 			ContentLink: m.gameManager.GetGameInfo(gameID).ContentURL,
 		}, nil
 	} else {
-		// ставим в очередь в матчмейкинг
+		// ставим в очередь в матчмейкинг.
 		m.matcher.CheckAndAdd(model.RoomQuery{
 			PlayerID: playerID,
 			GameID:   gameID,
@@ -122,10 +131,10 @@ func (m *RoomManager) PlayerQuit(ctx context.Context, gameID string, playerID uu
 	}
 	ch := m.GetOrCreateChan(room.ID)
 
-	// чтобы стейт игры не перезаписывался - в игру событие передаем через канал
+	// чтобы стейт игры не перезаписывался - в игру событие передаем через канал.
 	ch <- m.createQuitGameMsg(gameID, playerID)
 
-	// помечаем игроков, которые вышли
+	// помечаем игроков, которые вышли.
 	err = m.store.MarkDropRoomPlayer(ctx, room.ID, playerID)
 	if err != nil {
 		return err

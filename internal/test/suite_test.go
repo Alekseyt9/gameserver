@@ -4,6 +4,7 @@ import (
 	"gameserver/internal/run"
 	"gameserver/internal/services"
 	"gameserver/internal/services/store"
+	"gameserver/internal/test"
 	"net/http/httptest"
 	"testing"
 
@@ -17,7 +18,7 @@ type TestSuite struct {
 }
 
 func (suite *TestSuite) SetupSuite() {
-	store := NewMemStore()
+	store := test.NewMemStore()
 	suite.store = store
 
 	pm := services.NewPlayerManager(store)

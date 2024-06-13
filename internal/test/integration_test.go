@@ -24,10 +24,10 @@ func (suite *TestSuite) TestIntegration() {
 	ws2 := createWSDial(suite, cookies2)
 	connectToRoom(suite, cookies2)
 
-	// процесс игры для 1го игрока
+	// процесс игры для 1го игрока.
 	gameProcess(suite, ws1, playerID1, cookies1)
 
-	// процесс игры для 2го игрока
+	// процесс игры для 2го игрока.
 	gameProcess(suite, ws2, playerID2, cookies2)
 
 	time.Sleep(time.Second * 60)
@@ -127,7 +127,7 @@ func quitRoom(suite *TestSuite, cookies []*http.Cookie) {
 	require.NotEqual(t, "", bodyString)
 }
 
-// подключение игрока к комнате
+// подключение игрока к комнате.
 func connectToRoom(suite *TestSuite, cookies []*http.Cookie) {
 	ts := suite.ts
 	t := suite.T()
@@ -148,7 +148,7 @@ func connectToRoom(suite *TestSuite, cookies []*http.Cookie) {
 	require.NotEqual(t, "", bodyString)
 }
 
-// создание websocket соединения
+// создание websocket соединения.
 func createWSDial(s *TestSuite, cookies []*http.Cookie) *websocket.Conn {
 	ts := s.ts
 	t := s.T()
@@ -163,7 +163,7 @@ func createWSDial(s *TestSuite, cookies []*http.Cookie) *websocket.Conn {
 	return ws
 }
 
-// регистрация пользователя
+// регистрация пользователя.
 func playerRegister(suite *TestSuite) ([]*http.Cookie, *uuid.UUID) {
 	ts := suite.ts
 	t := suite.T()
