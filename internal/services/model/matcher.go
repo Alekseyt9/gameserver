@@ -6,7 +6,7 @@ type MatcherRoom struct {
 	ID            uuid.UUID
 	IsNew         bool   // новая комната
 	Status        string // wait/game
-	Players       []MatcherPlayer
+	Players       []*MatcherPlayer
 	GameID        string
 	StatusChanged bool
 	State         string

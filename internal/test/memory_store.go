@@ -12,7 +12,7 @@ import (
 type MemStore struct {
 	rooms       map[uuid.UUID]*MSRoom
 	players     map[uuid.UUID]*MSPlayer
-	roomPlayers []MSRoomPlayer
+	roomPlayers []*MSRoomPlayer
 	lock        sync.RWMutex
 }
 
@@ -38,11 +38,11 @@ func NewMemStore() *MemStore {
 	return &MemStore{
 		rooms:       make(map[uuid.UUID]*MSRoom, 0),
 		players:     make(map[uuid.UUID]*MSPlayer, 0),
-		roomPlayers: make([]MSRoomPlayer, 0),
+		roomPlayers: make([]*MSRoomPlayer, 0),
 	}
 }
 
-func (s *MemStore) GetPlayer(ctx context.Context, playerID uuid.UUID) (*model.Player, error) {
+func (s *MemStore) GetPlayer(_ context.Context, playerID uuid.UUID) (*model.Player, error) {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
 
@@ -56,7 +56,7 @@ func (s *MemStore) GetPlayer(ctx context.Context, playerID uuid.UUID) (*model.Pl
 	return nil, nil
 }
 
-func (s *MemStore) CreatePlayer(ctx context.Context, p *model.Player) error {
+func (s *MemStore) CreatePlayer(_ context.Context, p *model.Player) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -67,7 +67,7 @@ func (s *MemStore) CreatePlayer(ctx context.Context, p *model.Player) error {
 	return nil
 }
 
-func (s *MemStore) GetRoom(ctx context.Context, gameID string, playerID uuid.UUID) (*model.Room, error) {
+func (s *MemStore) GetRoom(_ context.Context, gameID string, playerID uuid.UUID) (*model.Room, error) {
 	var res *model.Room
 	s.lock.RLock()
 	defer s.lock.RUnlock()
@@ -90,7 +90,7 @@ exit:
 	return res, nil
 }
 
-func (s *MemStore) SetRoomState(ctx context.Context, id uuid.UUID, state string) error {
+func (s *MemStore) SetRoomState(_ context.Context, id uuid.UUID, state string) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -101,7 +101,7 @@ func (s *MemStore) SetRoomState(ctx context.Context, id uuid.UUID, state string)
 	return nil
 }
 
-func (s *MemStore) CreateOrUpdateRooms(ctx context.Context, rooms []*model.MatcherRoom) error {
+func (s *MemStore) CreateOrUpdateRooms(_ context.Context, rooms []*model.MatcherRoom) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -125,7 +125,7 @@ func (s *MemStore) CreateOrUpdateRooms(ctx context.Context, rooms []*model.Match
 
 		for _, p := range r.Players {
 			if p.IsNew {
-				s.roomPlayers = append(s.roomPlayers, MSRoomPlayer{
+				s.roomPlayers = append(s.roomPlayers, &MSRoomPlayer{
 					PlayerID: p.PlayerID,
 					RoomID:   r.ID,
 				})
@@ -136,7 +136,7 @@ func (s *MemStore) CreateOrUpdateRooms(ctx context.Context, rooms []*model.Match
 	return nil
 }
 
-func (s *MemStore) LoadWaitingRooms(ctx context.Context) ([]*model.MatcherRoom, error) {
+func (s *MemStore) LoadWaitingRooms(_ context.Context) ([]*model.MatcherRoom, error) {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
 
@@ -144,10 +144,10 @@ func (s *MemStore) LoadWaitingRooms(ctx context.Context) ([]*model.MatcherRoom, 
 
 	for _, v := range s.rooms {
 		if v.Status == "wait" {
-			ps := make([]model.MatcherPlayer, 0)
+			ps := make([]*model.MatcherPlayer, 0)
 			for _, p := range s.roomPlayers {
 				if p.RoomID == v.ID {
-					ps = append(ps, model.MatcherPlayer{
+					ps = append(ps, &model.MatcherPlayer{
 						PlayerID: p.PlayerID,
 					})
 				}
@@ -166,7 +166,7 @@ func (s *MemStore) LoadWaitingRooms(ctx context.Context) ([]*model.MatcherRoom, 
 	return res, nil
 }
 
-func (s *MemStore) MarkDropRoomPlayer(ctx context.Context, roomID uuid.UUID, playerID uuid.UUID) error {
+func (s *MemStore) MarkDropRoomPlayer(_ context.Context, roomID uuid.UUID, playerID uuid.UUID) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -175,29 +175,6 @@ func (s *MemStore) MarkDropRoomPlayer(ctx context.Context, roomID uuid.UUID, pla
 			r.IsQuit = true
 		}
 	}
-
-	/*
-		_, ok := s.rooms[roomID]
-		if ok {
-			prs := make([]MSRoomPlayer, 0)
-			for _, p := range s.roomPlayers {
-				if !(p.PlayerID == playerID && p.RoomID == roomID) {
-					prs = append(prs, p)
-				}
-			}
-			s.roomPlayers = prs
-
-			// удаляем комнату, если она пустая
-			hasPlayers := false
-			for _, p := range s.roomPlayers {
-				if p.RoomID == roomID {
-					hasPlayers = true
-				}
-			}
-			if !hasPlayers {
-				delete(s.rooms, roomID)
-			}
-		}*/
 
 	return nil
 }

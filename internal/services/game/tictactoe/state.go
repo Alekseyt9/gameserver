@@ -3,6 +3,7 @@ package game
 import "github.com/google/uuid"
 
 // состояние в базе
+//
 //easyjson:json
 type TTTState struct {
 	Field    [15][15]byte `json:"field"`
@@ -15,6 +16,7 @@ type TTTState struct {
 }
 
 // состояние для посылки игрокам
+//
 //easyjson:json
 type TTTSendState struct {
 	Field    [15][15]byte `json:"field"`

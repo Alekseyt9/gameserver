@@ -182,7 +182,7 @@ func (s *DBStore) LoadWaitingRooms(ctx context.Context) ([]*model.MatcherRoom, e
 		if curRoomId != roomID {
 			room = &model.MatcherRoom{
 				ID:      roomID,
-				Players: make([]model.MatcherPlayer, 0),
+				Players: make([]*model.MatcherPlayer, 0),
 				Status:  status,
 				GameID:  gameID,
 			}
@@ -190,7 +190,7 @@ func (s *DBStore) LoadWaitingRooms(ctx context.Context) ([]*model.MatcherRoom, e
 			res = append(res, room)
 		} else {
 			if playerID != nil {
-				room.Players = append(room.Players, model.MatcherPlayer{
+				room.Players = append(room.Players, &model.MatcherPlayer{
 					PlayerID: *playerID,
 				})
 			}

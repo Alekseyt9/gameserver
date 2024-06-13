@@ -11,6 +11,10 @@ import (
 
 func (h *Handler) RegisterPlayer(c *gin.Context) {
 	pID, err := c.Cookie("playerID")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "c.Cookie(playerID)"})
+	}
+
 	if pID != "" {
 		playerID, err := uuid.Parse(pID)
 		if err != nil {

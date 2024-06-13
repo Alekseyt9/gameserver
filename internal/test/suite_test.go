@@ -1,4 +1,4 @@
-package test
+package test_test
 
 import (
 	"gameserver/internal/run"
@@ -7,7 +7,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -18,18 +17,18 @@ type TestSuite struct {
 }
 
 func (suite *TestSuite) SetupSuite() {
-	s := NewMemStore()
-	suite.store = s
+	store := NewMemStore()
+	suite.store = store
 
-	pm := services.NewPlayerManager(s)
-	gm := services.NewGameManager(s, pm)
-	m, err := services.NewMatcher(s, pm, gm)
-	assert.NoError(suite.T(), err)
+	pm := services.NewPlayerManager(store)
+	gm := services.NewGameManager(store, pm)
+	m, err := services.NewMatcher(store, pm, gm)
+	suite.Require().NoError(err)
 
-	rm := services.NewRoomManager(s, gm, pm, m)
+	rm := services.NewRoomManager(store, gm, pm, m)
 	cfg := &run.Config{}
 
-	r := run.Router(s, pm, rm, cfg)
+	r := run.Router(store, pm, rm, cfg)
 	server := httptest.NewServer(r)
 	suite.ts = server
 }

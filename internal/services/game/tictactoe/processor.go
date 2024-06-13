@@ -115,20 +115,24 @@ func move(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage, playerID uuid.UUID
 
 	s.Field[d.Move[0]][d.Move[1]] = figureOf(s, playerID)
 	s.Turn = oppositeOf(s, playerID)
-
-	var line *[][]int
+	s.LastMove = d.Move
 
 	// проверить конец игры, ничью
-	if checkWin(s.Field, figureOf(s, s.Players[0]), line) {
+	var line *[][]int
+	chWin, line := checkWin(s.Field, figureOf(s, s.Players[0]), line)
+	if chWin {
 		s.Winner = 0
 		s.State = "finished"
 		s.WinLine = *line
-	} else if checkWin(s.Field, figureOf(s, s.Players[1]), line) {
-		s.Winner = 1
-		s.State = "finished"
-		s.WinLine = *line
-	} else if checkDraw(s.Field) {
-		s.State = "finished"
+	} else {
+		chWin, line = checkWin(s.Field, figureOf(s, s.Players[1]), line)
+		if chWin {
+			s.Winner = 1
+			s.State = "finished"
+			s.WinLine = *line
+		} else if checkDraw(s.Field) {
+			s.State = "finished"
+		}
 	}
 
 	saveState(ctx, s)
@@ -307,8 +311,8 @@ func createStateSendMsg(s *TTTState, playerID uuid.UUID) (*model.SendMessage, er
 // проверить ничью (все поля заняты)
 func checkDraw(board [size][size]byte) bool {
 	c := 0
-	for i := 0; i < size; i++ {
-		for j := 0; j < size; j++ {
+	for i := range size {
+		for j := range size {
 			if board[i][j] > 0 {
 				c++
 			}
@@ -317,26 +321,25 @@ func checkDraw(board [size][size]byte) bool {
 	return c == size*size
 }
 
-func checkWin(board [size][size]byte, figure byte, line *[][]int) bool {
-	for i := 0; i < size; i++ {
-		for j := 0; j < size; j++ {
+func checkWin(board [size][size]byte, figure byte, line *[][]int) (bool, *[][]int) {
+	for i := range size {
+		for j := range size {
 			if board[i][j] == figure {
 				for _, dir := range directions {
 					if checkDirection(board, figure, i, j, dir[0], dir[1]) {
-						line = &[][]int{{i, j}, {i + dir[0]*winCount, j + dir[1]*winCount}}
-						return true
+						return true, &[][]int{{i, j}, {i + dir[0]*winCount, j + dir[1]*winCount}}
 					}
 				}
 			}
 		}
 	}
 
-	return false
+	return false, nil
 }
 
 func checkDirection(board [size][size]byte, player byte, x, y, dx, dy int) bool {
 	count := 0
-	for k := 0; k < winCount; k++ {
+	for k := range winCount {
 		nx, ny := x+dx*k, y+dy*k
 		if nx < 0 || nx >= size || ny < 0 || ny >= size || board[nx][ny] != player {
 			return false
