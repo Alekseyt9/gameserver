@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"gameserver/internal/services/model"
 	"gameserver/internal/services/store"
+	"log"
 	"sync"
 	"time"
 
@@ -54,7 +55,10 @@ func NewMatcher(store store.Store, pm *PlayerManager, gm *GameManager) (*Matcher
 	go func() {
 		ctx = context.Background()
 		for {
-			m.doMatching(ctx)
+			err = m.doMatching(ctx)
+			if err != nil {
+				log.Printf("m.doMatching error: %v", err)
+			}
 			time.Sleep(time.Microsecond * taskInterval)
 		}
 	}()

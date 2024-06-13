@@ -22,7 +22,8 @@ func (h *Handler) ConnectRoom(c *gin.Context) {
 
 	playerID, err := uuid.Parse(pID)
 	if err != nil {
-		// TODO
+		c.JSON(http.StatusBadRequest, gin.H{"error": "uuid.Parse(pID)"})
+		return
 	}
 
 	var req RoomRequest

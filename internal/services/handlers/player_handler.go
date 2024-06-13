@@ -9,6 +9,10 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+	playerRandCharCount = 5
+)
+
 func (h *Handler) RegisterPlayer(c *gin.Context) {
 	pID, err := c.Cookie("playerID")
 	if err != nil {
@@ -36,7 +40,7 @@ func (h *Handler) RegisterPlayer(c *gin.Context) {
 
 	player := model.Player{
 		ID:   uuid.New(),
-		Name: "player" + h.generateRandomString(5),
+		Name: "player" + h.generateRandomString(playerRandCharCount),
 	}
 
 	maxAge := 2147483647

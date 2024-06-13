@@ -33,7 +33,7 @@ func (suite *TestSuite) TestIntegration() {
 	time.Sleep(time.Second * 60)
 }
 
-// процесс игры
+// процесс игры.
 func gameProcess(suite *TestSuite, ws *websocket.Conn, playerID *uuid.UUID, cookies []*http.Cookie) {
 	t := suite.T()
 

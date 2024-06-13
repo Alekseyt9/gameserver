@@ -27,8 +27,8 @@ func (suite *TestSuite) SetupSuite() {
 	suite.Require().NoError(err)
 
 	rm := services.NewRoomManager(store, gm, pm, m)
-	cfg := &run.Config{}
 
+	cfg := &run.Config{}
 	r := run.Router(store, pm, rm, cfg)
 	server := httptest.NewServer(r)
 	suite.ts = server

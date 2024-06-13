@@ -128,12 +128,10 @@ func (s *DBStore) CreateOrUpdateRooms(ctx context.Context, rooms []*model.Matche
 			if err != nil {
 				return err
 			}
-		} else {
-			if r.StatusChanged {
-				_, err = stmtRoomUpdate.ExecContext(ctx, r.Status, r.State)
-				if err != nil {
-					return err
-				}
+		} else if r.StatusChanged {
+			_, err = stmtRoomUpdate.ExecContext(ctx, r.Status, r.State)
+			if err != nil {
+				return err
 			}
 		}
 
@@ -167,7 +165,7 @@ func (s *DBStore) LoadWaitingRooms(ctx context.Context) ([]*model.MatcherRoom, e
 	defer rows.Close()
 
 	var (
-		curRoomId uuid.UUID
+		curRoomID uuid.UUID
 		room      *model.MatcherRoom
 		roomID    uuid.UUID
 		gameID    string
@@ -179,22 +177,21 @@ func (s *DBStore) LoadWaitingRooms(ctx context.Context) ([]*model.MatcherRoom, e
 		if err = rows.Scan(&roomID, &gameID, &status, &playerID); err != nil {
 			return nil, err
 		}
-		if curRoomId != roomID {
+		if curRoomID != roomID {
 			room = &model.MatcherRoom{
 				ID:      roomID,
 				Players: make([]*model.MatcherPlayer, 0),
 				Status:  status,
 				GameID:  gameID,
 			}
-			curRoomId = room.ID
+			curRoomID = room.ID
 			res = append(res, room)
-		} else {
-			if playerID != nil {
-				room.Players = append(room.Players, &model.MatcherPlayer{
-					PlayerID: *playerID,
-				})
-			}
+		} else if playerID != nil {
+			room.Players = append(room.Players, &model.MatcherPlayer{
+				PlayerID: *playerID,
+			})
 		}
+
 	}
 
 	if err = rows.Err(); err != nil {

@@ -49,7 +49,7 @@ func Router(s store.Store, pm *services.PlayerManager, rm *services.RoomManager,
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 	services.NewWSManager(r, pm, rm)
-	setupFileServer(r)
+	setupFileServer(r, cfg)
 	setupHandlers(r, s, rm)
 	return r
 }
@@ -61,7 +61,7 @@ func setupHandlers(r *gin.Engine, s store.Store, rm *services.RoomManager) {
 	r.POST("/api/room/quit", h.QuitRoom)
 }
 
-func setupFileServer(r *gin.Engine) {
+func setupFileServer(r *gin.Engine, cfg *Config) {
 	r.Use(gzip.Gzip(gzip.BestCompression))
 
 	contentDir := filepath.Join("..", "..", "internal", "content")
@@ -75,11 +75,15 @@ func setupFileServer(r *gin.Engine) {
 		tmplPath := filepath.Join(contentDir, "index.html")
 		tmpl := template.Must(template.ParseFiles(tmplPath))
 
-		// TODO задавать базовый адрес из командной строки
+		wsURL := "ws" + cfg.Address[len("http"):] + "/ws"
 		data := PageData{
-			WebSocketURL: "ws://localhost:8080/ws",
+			WebSocketURL: wsURL,
 		}
 		c.Writer.Header().Set("Content-Type", "text/html")
-		tmpl.Execute(c.Writer, data)
+		err := tmpl.Execute(c.Writer, data)
+		if err != nil {
+			c.String(http.StatusInternalServerError, "Failed to render template: %v", err)
+			return
+		}
 	})
 }

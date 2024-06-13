@@ -23,7 +23,10 @@ func NewWSManager(router *gin.Engine, pm *PlayerManager, rm *RoomManager) *WebSo
 	ws := melody.New()
 
 	router.GET("/ws", func(c *gin.Context) {
-		ws.HandleRequest(c.Writer, c.Request)
+		err := ws.HandleRequest(c.Writer, c.Request)
+		if err != nil {
+			log.Printf("ws.HandleRequest error: %v", err)
+		}
 	})
 
 	ws.HandleConnect(func(s *melody.Session) {
@@ -57,18 +60,18 @@ func NewWSManager(router *gin.Engine, pm *PlayerManager, rm *RoomManager) *WebSo
 	ws.HandleMessage(func(s *melody.Session, data []byte) {
 		playerID, err := getPlayerID(s)
 		if err != nil {
-			log.Printf("Ошибка получения playerID из куки %w", err)
+			log.Printf("Ошибка получения playerID из куки %v", err)
 		}
 
 		msg, err := createGameMsg(data, *playerID)
 		if err != nil {
-			log.Printf("Ошибка создания GameMsg %w", err)
+			log.Printf("Ошибка создания GameMsg %v", err)
 		}
 
 		// комната уже есть, тк в игре
 		room, err := m.roomManager.GetExistingRoom(s.Request.Context(), msg.GameID, msg.PlayerID)
 		if err != nil {
-			log.Printf("Ошибка получения комнаты %w", err)
+			log.Printf("Ошибка получения комнаты %v", err)
 		}
 
 		ch := m.roomManager.GetOrCreateChan(room.ID)

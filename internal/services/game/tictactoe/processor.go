@@ -20,12 +20,14 @@ var directions = [][2]int{
 }
 
 const (
-	size        = 15
-	empty       = 0
-	winCount    = 5
-	playerCount = 2
-	turnTimeout = 60 * 5
-	contentURL  = "/content/games/tictactoe/index.html"
+	size          = 15
+	empty         = 0
+	winCount      = 5
+	playerCount   = 2
+	turnTimeout   = 60 * 5
+	contentURL    = "/content/games/tictactoe/index.html"
+	playerFigure1 = 1
+	playerFigure2 = 2
 )
 
 func New() model.GameProcessor {
@@ -75,7 +77,7 @@ func (p *TTCProcessor) Process(ctx model.ProcessorCtx, st string, msg *model.Gam
 	return nil
 }
 
-// создать сообщение об ошибке
+// создать сообщение об ошибке.
 func createErrorMsg(playerID uuid.UUID, s string) model.SendMessage {
 	return model.SendMessage{
 		PlayerID: playerID,
@@ -94,7 +96,7 @@ func createErrorMsg(playerID uuid.UUID, s string) model.SendMessage {
 	}
 }
 
-// сделать ход
+// сделать ход.
 func move(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage, playerID uuid.UUID) error {
 	if playerID != s.Turn {
 		ctx.AddSendMessage(createErrorMsg(playerID, "Сейчас ход другого игрока"))
@@ -120,7 +122,7 @@ func move(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage, playerID uuid.UUID
 	s.Turn = oppositeOf(s, playerID)
 	s.LastMove = d.Move
 
-	// проверить конец игры, ничью
+	// проверить конец игры, ничью.
 	var line *[][]int
 	chWin, line := checkWin(s.Field, figureOf(s, s.Players[0]), line)
 	if chWin {
@@ -138,7 +140,11 @@ func move(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage, playerID uuid.UUID
 		}
 	}
 
-	saveState(ctx, s)
+	err = saveState(ctx, s)
+	if err != nil {
+		return err
+	}
+
 	for _, p := range s.Players {
 		var msg *model.SendMessage
 		msg, err = createStateSendMsg(s, p)
@@ -152,16 +158,16 @@ func move(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage, playerID uuid.UUID
 	return nil
 }
 
-// фигура игрока
+// фигура игрока.
 func figureOf(s *TTTState, playerID uuid.UUID) byte {
-	// у первого - крестик
+	// у первого - крестик.
 	if s.Players[0] == playerID {
-		return 1
+		return playerFigure1
 	}
-	return 2
+	return playerFigure2
 }
 
-// противоположный игрок
+// противоположный игрок.
 func oppositeOf(s *TTTState, playerID uuid.UUID) uuid.UUID {
 	p := s.Players[0]
 	if p == playerID {
@@ -179,7 +185,7 @@ func indexOf(s *TTTState, playerID uuid.UUID) int {
 	return -1
 }
 
-// игрок покинул комнату
+// игрок покинул комнату.
 func quit(ctx model.ProcessorCtx, s *TTTState, playerID uuid.UUID) error {
 	if len(s.Players) == 2 {
 		winner := oppositeOf(s, playerID)
@@ -191,13 +197,17 @@ func quit(ctx model.ProcessorCtx, s *TTTState, playerID uuid.UUID) error {
 			return err
 		}
 		ctx.AddSendMessage(*m)
-		saveState(ctx, s)
+
+		err = saveState(ctx, s)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
-// создаем игроков в state, определяем первый ход
+// создаем игроков в state, определяем первый ход.
 func start(players []uuid.UUID) (string, error) {
 	s := &TTTState{
 		State:  "game",
@@ -205,7 +215,7 @@ func start(players []uuid.UUID) (string, error) {
 		Winner: -1,
 	}
 
-	// крестик ходит первый
+	// крестик ходит первый.
 	if s.Turn == players[0] {
 		s.Players = []uuid.UUID{players[0], players[1]}
 	} else {
@@ -279,7 +289,7 @@ func createMoveData(s string) (*TTTMoveData, error) {
 	return &res, nil
 }
 
-// создать сообщение с состоянием игры для посылки игроку
+// создать сообщение с состоянием игры для посылки игроку.
 func createStateSendMsg(s *TTTState, playerID uuid.UUID) (*model.SendMessage, error) {
 	ss := TTTSendState{
 		Field:    s.Field,
@@ -312,7 +322,7 @@ func createStateSendMsg(s *TTTState, playerID uuid.UUID) (*model.SendMessage, er
 	}, nil
 }
 
-// проверить ничью (все поля заняты)
+// проверить ничью (все поля заняты).
 func checkDraw(board [size][size]byte) bool {
 	c := 0
 	for i := range size {

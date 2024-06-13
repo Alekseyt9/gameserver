@@ -32,7 +32,7 @@ func NewRoomManager(store store.Store, gm *GameManager, pm *PlayerManager, m *Ma
 	return &RoomManager{
 		store:         store,
 		gameManager:   gm,
-		chanMap:       make(map[uuid.UUID]chan model.GameMsg, 100),
+		chanMap:       make(map[uuid.UUID]chan model.GameMsg, chanBuffer),
 		matcher:       m,
 		playerManager: pm,
 	}
@@ -123,7 +123,7 @@ func (m *RoomManager) PlayerConnect(ctx context.Context, playerID uuid.UUID, gam
 	}
 }
 
-// выход из комнаты (выйти можно только один раз)
+// выход из комнаты (выйти можно только один раз).
 func (m *RoomManager) PlayerQuit(ctx context.Context, gameID string, playerID uuid.UUID) error {
 	room, err := m.GetExistingRoom(ctx, gameID, playerID)
 	if err != nil {
@@ -143,11 +143,11 @@ func (m *RoomManager) PlayerQuit(ctx context.Context, gameID string, playerID uu
 	return nil
 }
 
-func (m *RoomManager) createQuitGameMsg(gameID string, playerId uuid.UUID) model.GameMsg {
+func (m *RoomManager) createQuitGameMsg(gameID string, playerID uuid.UUID) model.GameMsg {
 	return model.GameMsg{
 		Type:     "game",
 		GameID:   gameID,
-		PlayerID: playerId,
+		PlayerID: playerID,
 		Data:     map[string]interface{}{"action": "quit"},
 	}
 }

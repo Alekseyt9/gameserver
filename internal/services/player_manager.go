@@ -28,7 +28,7 @@ func (m *PlayerManager) GetOrCreateChan(palyerID uuid.UUID) chan model.SendMessa
 
 	ch, ok := m.chanMap[palyerID]
 	if !ok {
-		ch = make(chan model.SendMessage, 100)
+		ch = make(chan model.SendMessage, chanBuffer)
 		m.chanMap[palyerID] = ch
 	}
 	return ch

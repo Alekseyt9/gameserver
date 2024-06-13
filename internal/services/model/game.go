@@ -2,11 +2,11 @@ package model
 
 import "github.com/google/uuid"
 
-// общая информация об игре
+// общая информация об игре.
 type GameInfo struct {
-	PlayerCount int    // количество игроков в игре
-	ContentURL  string // ссылка на index.html игры
-	TurnTimeout int    // ограничение времени на ход
+	PlayerCount int    // количество игроков в игре.
+	ContentURL  string // ссылка на index.html игры.
+	TurnTimeout int    // ограничение времени на ход.
 }
 
 type GameMsg struct {
@@ -16,7 +16,7 @@ type GameMsg struct {
 	Data     map[string]interface{}
 }
 
-// частично десериализованное сообщение с клиента
+// частично десериализованное сообщение с клиента.
 //
 //easyjson:json
 type InMsg struct {
