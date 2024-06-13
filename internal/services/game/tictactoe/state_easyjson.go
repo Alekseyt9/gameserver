@@ -91,6 +91,67 @@ func easyjsonBd887cf1DecodeGameserverInternalServicesGameTictactoe(in *jlexer.Le
 			if data := in.UnsafeBytes(); in.Ok() {
 				in.AddError((out.Turn).UnmarshalText(data))
 			}
+		case "winline":
+			if in.IsNull() {
+				in.Skip()
+				out.WinLine = nil
+			} else {
+				in.Delim('[')
+				if out.WinLine == nil {
+					if !in.IsDelim(']') {
+						out.WinLine = make([][]int, 0, 2)
+					} else {
+						out.WinLine = [][]int{}
+					}
+				} else {
+					out.WinLine = (out.WinLine)[:0]
+				}
+				for !in.IsDelim(']') {
+					var v4 []int
+					if in.IsNull() {
+						in.Skip()
+						v4 = nil
+					} else {
+						in.Delim('[')
+						if v4 == nil {
+							if !in.IsDelim(']') {
+								v4 = make([]int, 0, 8)
+							} else {
+								v4 = []int{}
+							}
+						} else {
+							v4 = (v4)[:0]
+						}
+						for !in.IsDelim(']') {
+							var v5 int
+							v5 = int(in.Int())
+							v4 = append(v4, v5)
+							in.WantComma()
+						}
+						in.Delim(']')
+					}
+					out.WinLine = append(out.WinLine, v4)
+					in.WantComma()
+				}
+				in.Delim(']')
+			}
+		case "lastmove":
+			if in.IsNull() {
+				in.Skip()
+			} else {
+				in.Delim('[')
+				v6 := 0
+				for !in.IsDelim(']') {
+					if v6 < 2 {
+						(out.LastMove)[v6] = int(in.Int())
+						v6++
+					} else {
+						in.SkipRecursive()
+					}
+					in.WantComma()
+				}
+				in.Delim(']')
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -109,11 +170,11 @@ func easyjsonBd887cf1EncodeGameserverInternalServicesGameTictactoe(out *jwriter.
 		const prefix string = ",\"field\":"
 		out.RawString(prefix[1:])
 		out.RawByte('[')
-		for v4 := range in.Field {
-			if v4 > 0 {
+		for v7 := range in.Field {
+			if v7 > 0 {
 				out.RawByte(',')
 			}
-			out.Base64Bytes((in.Field)[v4][:])
+			out.Base64Bytes((in.Field)[v7][:])
 		}
 		out.RawByte(']')
 	}
@@ -124,11 +185,11 @@ func easyjsonBd887cf1EncodeGameserverInternalServicesGameTictactoe(out *jwriter.
 			out.RawString("null")
 		} else {
 			out.RawByte('[')
-			for v6, v7 := range in.Players {
-				if v6 > 0 {
+			for v9, v10 := range in.Players {
+				if v9 > 0 {
 					out.RawByte(',')
 				}
-				out.RawText((v7).MarshalText())
+				out.RawText((v10).MarshalText())
 			}
 			out.RawByte(']')
 		}
@@ -147,6 +208,45 @@ func easyjsonBd887cf1EncodeGameserverInternalServicesGameTictactoe(out *jwriter.
 		const prefix string = ",\"turn\":"
 		out.RawString(prefix)
 		out.RawText((in.Turn).MarshalText())
+	}
+	{
+		const prefix string = ",\"winline\":"
+		out.RawString(prefix)
+		if in.WinLine == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+			out.RawString("null")
+		} else {
+			out.RawByte('[')
+			for v11, v12 := range in.WinLine {
+				if v11 > 0 {
+					out.RawByte(',')
+				}
+				if v12 == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+					out.RawString("null")
+				} else {
+					out.RawByte('[')
+					for v13, v14 := range v12 {
+						if v13 > 0 {
+							out.RawByte(',')
+						}
+						out.Int(int(v14))
+					}
+					out.RawByte(']')
+				}
+			}
+			out.RawByte(']')
+		}
+	}
+	{
+		const prefix string = ",\"lastmove\":"
+		out.RawString(prefix)
+		out.RawByte('[')
+		for v15 := range in.LastMove {
+			if v15 > 0 {
+				out.RawByte(',')
+			}
+			out.Int(int((in.LastMove)[v15]))
+		}
+		out.RawByte(']')
 	}
 	out.RawByte('}')
 }
@@ -198,15 +298,15 @@ func easyjsonBd887cf1DecodeGameserverInternalServicesGameTictactoe1(in *jlexer.L
 				in.Skip()
 			} else {
 				in.Delim('[')
-				v8 := 0
+				v16 := 0
 				for !in.IsDelim(']') {
-					if v8 < 15 {
+					if v16 < 15 {
 						if in.IsNull() {
 							in.Skip()
 						} else {
-							copy((out.Field)[v8][:], in.Bytes())
+							copy((out.Field)[v16][:], in.Bytes())
 						}
-						v8++
+						v16++
 					} else {
 						in.SkipRecursive()
 					}
@@ -230,11 +330,11 @@ func easyjsonBd887cf1DecodeGameserverInternalServicesGameTictactoe1(in *jlexer.L
 					out.Players = (out.Players)[:0]
 				}
 				for !in.IsDelim(']') {
-					var v10 uuid.UUID
+					var v18 uuid.UUID
 					if data := in.UnsafeBytes(); in.Ok() {
-						in.AddError((v10).UnmarshalText(data))
+						in.AddError((v18).UnmarshalText(data))
 					}
-					out.Players = append(out.Players, v10)
+					out.Players = append(out.Players, v18)
 					in.WantComma()
 				}
 				in.Delim(']')
@@ -251,6 +351,67 @@ func easyjsonBd887cf1DecodeGameserverInternalServicesGameTictactoe1(in *jlexer.L
 			out.State = string(in.String())
 		case "winner":
 			out.Winner = int(in.Int())
+		case "winline":
+			if in.IsNull() {
+				in.Skip()
+				out.WinLine = nil
+			} else {
+				in.Delim('[')
+				if out.WinLine == nil {
+					if !in.IsDelim(']') {
+						out.WinLine = make([][]int, 0, 2)
+					} else {
+						out.WinLine = [][]int{}
+					}
+				} else {
+					out.WinLine = (out.WinLine)[:0]
+				}
+				for !in.IsDelim(']') {
+					var v19 []int
+					if in.IsNull() {
+						in.Skip()
+						v19 = nil
+					} else {
+						in.Delim('[')
+						if v19 == nil {
+							if !in.IsDelim(']') {
+								v19 = make([]int, 0, 8)
+							} else {
+								v19 = []int{}
+							}
+						} else {
+							v19 = (v19)[:0]
+						}
+						for !in.IsDelim(']') {
+							var v20 int
+							v20 = int(in.Int())
+							v19 = append(v19, v20)
+							in.WantComma()
+						}
+						in.Delim(']')
+					}
+					out.WinLine = append(out.WinLine, v19)
+					in.WantComma()
+				}
+				in.Delim(']')
+			}
+		case "lastmove":
+			if in.IsNull() {
+				in.Skip()
+			} else {
+				in.Delim('[')
+				v21 := 0
+				for !in.IsDelim(']') {
+					if v21 < 2 {
+						(out.LastMove)[v21] = int(in.Int())
+						v21++
+					} else {
+						in.SkipRecursive()
+					}
+					in.WantComma()
+				}
+				in.Delim(']')
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -269,11 +430,11 @@ func easyjsonBd887cf1EncodeGameserverInternalServicesGameTictactoe1(out *jwriter
 		const prefix string = ",\"field\":"
 		out.RawString(prefix[1:])
 		out.RawByte('[')
-		for v11 := range in.Field {
-			if v11 > 0 {
+		for v22 := range in.Field {
+			if v22 > 0 {
 				out.RawByte(',')
 			}
-			out.Base64Bytes((in.Field)[v11][:])
+			out.Base64Bytes((in.Field)[v22][:])
 		}
 		out.RawByte(']')
 	}
@@ -284,11 +445,11 @@ func easyjsonBd887cf1EncodeGameserverInternalServicesGameTictactoe1(out *jwriter
 			out.RawString("null")
 		} else {
 			out.RawByte('[')
-			for v13, v14 := range in.Players {
-				if v13 > 0 {
+			for v24, v25 := range in.Players {
+				if v24 > 0 {
 					out.RawByte(',')
 				}
-				out.RawText((v14).MarshalText())
+				out.RawText((v25).MarshalText())
 			}
 			out.RawByte(']')
 		}
@@ -312,6 +473,45 @@ func easyjsonBd887cf1EncodeGameserverInternalServicesGameTictactoe1(out *jwriter
 		const prefix string = ",\"winner\":"
 		out.RawString(prefix)
 		out.Int(int(in.Winner))
+	}
+	{
+		const prefix string = ",\"winline\":"
+		out.RawString(prefix)
+		if in.WinLine == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+			out.RawString("null")
+		} else {
+			out.RawByte('[')
+			for v26, v27 := range in.WinLine {
+				if v26 > 0 {
+					out.RawByte(',')
+				}
+				if v27 == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+					out.RawString("null")
+				} else {
+					out.RawByte('[')
+					for v28, v29 := range v27 {
+						if v28 > 0 {
+							out.RawByte(',')
+						}
+						out.Int(int(v29))
+					}
+					out.RawByte(']')
+				}
+			}
+			out.RawByte(']')
+		}
+	}
+	{
+		const prefix string = ",\"lastmove\":"
+		out.RawString(prefix)
+		out.RawByte('[')
+		for v30 := range in.LastMove {
+			if v30 > 0 {
+				out.RawByte(',')
+			}
+			out.Int(int((in.LastMove)[v30]))
+		}
+		out.RawByte(']')
 	}
 	out.RawByte('}')
 }

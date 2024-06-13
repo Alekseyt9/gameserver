@@ -39,22 +39,16 @@ func easyjson4086215fDecodeGameserverInternalServicesGameTictactoe(in *jlexer.Le
 		case "move":
 			if in.IsNull() {
 				in.Skip()
-				out.Move = nil
 			} else {
 				in.Delim('[')
-				if out.Move == nil {
-					if !in.IsDelim(']') {
-						out.Move = make([]int, 0, 8)
-					} else {
-						out.Move = []int{}
-					}
-				} else {
-					out.Move = (out.Move)[:0]
-				}
+				v1 := 0
 				for !in.IsDelim(']') {
-					var v1 int
-					v1 = int(in.Int())
-					out.Move = append(out.Move, v1)
+					if v1 < 2 {
+						(out.Move)[v1] = int(in.Int())
+						v1++
+					} else {
+						in.SkipRecursive()
+					}
 					in.WantComma()
 				}
 				in.Delim(']')
@@ -76,18 +70,14 @@ func easyjson4086215fEncodeGameserverInternalServicesGameTictactoe(out *jwriter.
 	{
 		const prefix string = ",\"move\":"
 		out.RawString(prefix[1:])
-		if in.Move == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
-			out.RawString("null")
-		} else {
-			out.RawByte('[')
-			for v2, v3 := range in.Move {
-				if v2 > 0 {
-					out.RawByte(',')
-				}
-				out.Int(int(v3))
+		out.RawByte('[')
+		for v2 := range in.Move {
+			if v2 > 0 {
+				out.RawByte(',')
 			}
-			out.RawByte(']')
+			out.Int(int((in.Move)[v2]))
 		}
+		out.RawByte(']')
 	}
 	out.RawByte('}')
 }
