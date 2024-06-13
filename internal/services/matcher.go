@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/beevik/guid"
+	"github.com/google/uuid"
 )
 
 type Matcher struct {
@@ -121,7 +121,7 @@ func (m *Matcher) doMatching(ctx context.Context) error {
 
 		if wr == nil { // создаем новую комнату
 			wr = &model.MatcherRoom{
-				ID:      *guid.New(),
+				ID:      uuid.New(),
 				Players: make([]model.MatcherPlayer, 0),
 				IsNew:   true,
 				Status:  "wait",

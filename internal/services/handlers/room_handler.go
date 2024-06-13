@@ -3,8 +3,8 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/beevik/guid"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type RoomRequest struct {
@@ -19,7 +19,7 @@ func (h *Handler) ConnectRoom(c *gin.Context) {
 		return
 	}
 
-	playerID, err := guid.ParseString(pID)
+	playerID, err := uuid.Parse(pID)
 	if err != nil {
 		// TODO
 	}
@@ -30,7 +30,7 @@ func (h *Handler) ConnectRoom(c *gin.Context) {
 		return
 	}
 
-	conRes, err := h.roomManager.PlayerConnect(c.Request.Context(), *playerID, req.GameID)
+	conRes, err := h.roomManager.PlayerConnect(c.Request.Context(), playerID, req.GameID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "PlayerConnect"})
 		return
@@ -55,13 +55,13 @@ func (h *Handler) QuitRoom(c *gin.Context) {
 		return
 	}
 
-	playerID, err := guid.ParseString(plID)
+	playerID, err := uuid.Parse(plID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	err = h.roomManager.PlayerQuit(c.Request.Context(), req.GameID, *playerID)
+	err = h.roomManager.PlayerQuit(c.Request.Context(), req.GameID, playerID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

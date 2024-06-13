@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/beevik/guid"
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -33,7 +33,7 @@ func (s *TestSuite) TestIntegration() {
 }
 
 // процесс игры
-func gameProcess(s *TestSuite, ws *websocket.Conn, playerID *guid.Guid, cookies []*http.Cookie) {
+func gameProcess(s *TestSuite, ws *websocket.Conn, playerID *uuid.UUID, cookies []*http.Cookie) {
 	t := s.T()
 
 	go func() {
@@ -161,7 +161,7 @@ func createWSDial(s *TestSuite, cookies []*http.Cookie) *websocket.Conn {
 }
 
 // регистрация пользователя
-func playerRegister(s *TestSuite) ([]*http.Cookie, *guid.Guid) {
+func playerRegister(s *TestSuite) ([]*http.Cookie, *uuid.UUID) {
 	ts := s.ts
 	t := s.T()
 
@@ -182,8 +182,8 @@ func playerRegister(s *TestSuite) ([]*http.Cookie, *guid.Guid) {
 		}
 	}
 	require.True(t, playerID != "")
-	pID, err := guid.ParseString(playerID)
+	pID, err := uuid.Parse(playerID)
 	require.NoError(t, err)
 
-	return cookies, pID
+	return cookies, &pID
 }

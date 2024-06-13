@@ -4,8 +4,8 @@ import (
 	"gameserver/internal/services/model"
 	"log"
 
-	"github.com/beevik/guid"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/olahol/melody"
 )
 
@@ -75,7 +75,7 @@ func NewWSManager(router *gin.Engine, pm *PlayerManager, rm *RoomManager) *WebSo
 	return m
 }
 
-func createGameMsg(data []byte, playerID guid.Guid) (*model.GameMsg, error) {
+func createGameMsg(data []byte, playerID uuid.UUID) (*model.GameMsg, error) {
 	var m model.InMsg
 	err := m.UnmarshalJSON(data)
 	if err != nil {
@@ -89,15 +89,15 @@ func createGameMsg(data []byte, playerID guid.Guid) (*model.GameMsg, error) {
 	}, nil
 }
 
-func getPlayerID(s *melody.Session) (*guid.Guid, error) {
+func getPlayerID(s *melody.Session) (*uuid.UUID, error) {
 	cookies := s.Request.Cookies()
-	var playerID *guid.Guid
+	var playerID uuid.UUID
 	var err error
 	for _, cookie := range cookies {
 		if cookie.Name == "playerID" {
-			playerID, err = guid.ParseString(cookie.Value)
+			playerID, err = uuid.Parse(cookie.Value)
 			break
 		}
 	}
-	return playerID, err
+	return &playerID, err
 }

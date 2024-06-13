@@ -6,7 +6,7 @@ import (
 	"gameserver/internal/services/store"
 	"sync"
 
-	"github.com/beevik/guid"
+	"github.com/google/uuid"
 )
 
 type RoomManager struct {
@@ -14,7 +14,7 @@ type RoomManager struct {
 	gameManager   *GameManager
 	playerManager *PlayerManager
 	matcher       *Matcher
-	chanMap       map[guid.Guid]chan model.GameMsg
+	chanMap       map[uuid.UUID]chan model.GameMsg
 	chanLock      sync.RWMutex
 }
 
@@ -26,13 +26,13 @@ func NewRoomManager(store store.Store, gm *GameManager, pm *PlayerManager, m *Ma
 	return &RoomManager{
 		store:         store,
 		gameManager:   gm,
-		chanMap:       make(map[guid.Guid]chan model.GameMsg, 100),
+		chanMap:       make(map[uuid.UUID]chan model.GameMsg, 100),
 		matcher:       m,
 		playerManager: pm,
 	}
 }
 
-func (m *RoomManager) GetOrCreateChan(roomID guid.Guid) chan model.GameMsg {
+func (m *RoomManager) GetOrCreateChan(roomID uuid.UUID) chan model.GameMsg {
 	m.chanLock.Lock()
 	defer m.chanLock.Unlock()
 
@@ -78,7 +78,7 @@ func (m *RoomManager) processResult(gctx *GameProcessorCtx) error {
 	return nil
 }
 
-func (m *RoomManager) DeleteChan(roomID guid.Guid) {
+func (m *RoomManager) DeleteChan(roomID uuid.UUID) {
 	m.chanLock.Lock()
 	defer m.chanLock.Unlock()
 
@@ -91,7 +91,7 @@ func (m *RoomManager) DeleteChan(roomID guid.Guid) {
 
 // подключение к существующей комнате или создание комнаты
 // подключаться нужно каждый раз при коннекте игрока
-func (m *RoomManager) PlayerConnect(ctx context.Context, playerID guid.Guid, gameID string) (*PlayerConnectResult, error) {
+func (m *RoomManager) PlayerConnect(ctx context.Context, playerID uuid.UUID, gameID string) (*PlayerConnectResult, error) {
 	room, err := m.GetExistingRoom(ctx, gameID, playerID)
 	if err != nil {
 		return nil, err
@@ -111,7 +111,7 @@ func (m *RoomManager) PlayerConnect(ctx context.Context, playerID guid.Guid, gam
 }
 
 // выход из комнаты (выйти можно только один раз)
-func (m *RoomManager) PlayerQuit(ctx context.Context, gameID string, playerID guid.Guid) error {
+func (m *RoomManager) PlayerQuit(ctx context.Context, gameID string, playerID uuid.UUID) error {
 	room, err := m.GetExistingRoom(ctx, gameID, playerID)
 	if err != nil {
 		return err
@@ -130,7 +130,7 @@ func (m *RoomManager) PlayerQuit(ctx context.Context, gameID string, playerID gu
 	return nil
 }
 
-func (m *RoomManager) createQuitGameMsg(gameID string, playerId guid.Guid) model.GameMsg {
+func (m *RoomManager) createQuitGameMsg(gameID string, playerId uuid.UUID) model.GameMsg {
 	return model.GameMsg{
 		Type:     "game",
 		GameID:   gameID,
@@ -139,7 +139,7 @@ func (m *RoomManager) createQuitGameMsg(gameID string, playerId guid.Guid) model
 	}
 }
 
-func (m *RoomManager) GetExistingRoom(ctx context.Context, gameID string, playerID guid.Guid) (*model.Room, error) {
+func (m *RoomManager) GetExistingRoom(ctx context.Context, gameID string, playerID uuid.UUID) (*model.Room, error) {
 	r, err := m.store.GetRoom(ctx, gameID, playerID)
 	if err != nil {
 		return nil, err

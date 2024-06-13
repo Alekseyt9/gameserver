@@ -5,24 +5,24 @@ import (
 	"gameserver/internal/services/store"
 	"sync"
 
-	"github.com/beevik/guid"
+	"github.com/google/uuid"
 )
 
 type PlayerManager struct {
 	store    store.Store
-	chanMap  map[guid.Guid]chan model.SendMessage
+	chanMap  map[uuid.UUID]chan model.SendMessage
 	chanLock sync.RWMutex
 }
 
 func NewPlayerManager(store store.Store) *PlayerManager {
 	return &PlayerManager{
 		store:   store,
-		chanMap: make(map[guid.Guid]chan model.SendMessage),
+		chanMap: make(map[uuid.UUID]chan model.SendMessage),
 	}
 }
 
 // получить канал для свази с игроком
-func (m *PlayerManager) GetOrCreateChan(palyerID guid.Guid) chan model.SendMessage {
+func (m *PlayerManager) GetOrCreateChan(palyerID uuid.UUID) chan model.SendMessage {
 	m.chanLock.Lock()
 	defer m.chanLock.Unlock()
 
@@ -35,7 +35,7 @@ func (m *PlayerManager) GetOrCreateChan(palyerID guid.Guid) chan model.SendMessa
 }
 
 // получить канал для свази с игроком
-func (m *PlayerManager) GetChan(palyerID guid.Guid) *chan model.SendMessage {
+func (m *PlayerManager) GetChan(palyerID uuid.UUID) *chan model.SendMessage {
 	m.chanLock.RLock()
 	defer m.chanLock.RUnlock()
 
@@ -47,7 +47,7 @@ func (m *PlayerManager) GetChan(palyerID guid.Guid) *chan model.SendMessage {
 }
 
 // удалить канал для свзяи с игроком
-func (m *PlayerManager) DeleteChan(palyerID guid.Guid) {
+func (m *PlayerManager) DeleteChan(palyerID uuid.UUID) {
 	m.chanLock.Lock()
 	defer m.chanLock.Unlock()
 

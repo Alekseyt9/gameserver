@@ -1,8 +1,8 @@
 package model
 
-import "github.com/beevik/guid"
+import "github.com/google/uuid"
 
 type Player struct {
-	ID   guid.Guid
+	ID   uuid.UUID
 	Name string
 }

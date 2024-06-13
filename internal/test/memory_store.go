@@ -5,39 +5,39 @@ import (
 	"gameserver/internal/services/model"
 	"sync"
 
-	"github.com/beevik/guid"
+	"github.com/google/uuid"
 )
 
 // для тестов
 type MemStore struct {
-	rooms       map[guid.Guid]*MSRoom
-	players     map[guid.Guid]*MSPlayer
+	rooms       map[uuid.UUID]*MSRoom
+	players     map[uuid.UUID]*MSPlayer
 	roomPlayers []MSRoomPlayer
 	lock        sync.RWMutex
 }
 
 type MSRoom struct {
-	ID     guid.Guid
+	ID     uuid.UUID
 	GameID string
 	State  string
 	Status string
 }
 
 type MSPlayer struct {
-	ID   guid.Guid
+	ID   uuid.UUID
 	Name string
 }
 
 type MSRoomPlayer struct {
-	PlayerID guid.Guid
-	RoomID   guid.Guid
+	PlayerID uuid.UUID
+	RoomID   uuid.UUID
 	IsQuit   bool
 }
 
 func NewMemStore() *MemStore {
 	return &MemStore{
-		rooms:       make(map[guid.Guid]*MSRoom, 0),
-		players:     make(map[guid.Guid]*MSPlayer, 0),
+		rooms:       make(map[uuid.UUID]*MSRoom, 0),
+		players:     make(map[uuid.UUID]*MSPlayer, 0),
 		roomPlayers: make([]MSRoomPlayer, 0),
 	}
 }
@@ -53,7 +53,7 @@ func (s *MemStore) CreatePlayer(ctx context.Context, p *model.Player) error {
 	return nil
 }
 
-func (s *MemStore) GetRoom(ctx context.Context, gameID string, playerID guid.Guid) (*model.Room, error) {
+func (s *MemStore) GetRoom(ctx context.Context, gameID string, playerID uuid.UUID) (*model.Room, error) {
 	var res *model.Room
 	s.lock.RLock()
 	defer s.lock.RUnlock()
@@ -76,7 +76,7 @@ exit:
 	return res, nil
 }
 
-func (s *MemStore) SetRoomState(ctx context.Context, id guid.Guid, state string) error {
+func (s *MemStore) SetRoomState(ctx context.Context, id uuid.UUID, state string) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -152,7 +152,7 @@ func (s *MemStore) LoadWaitingRooms(ctx context.Context) ([]*model.MatcherRoom, 
 	return res, nil
 }
 
-func (s *MemStore) MarkDropRoomPlayer(ctx context.Context, roomID guid.Guid, playerID guid.Guid) error {
+func (s *MemStore) MarkDropRoomPlayer(ctx context.Context, roomID uuid.UUID, playerID uuid.UUID) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 

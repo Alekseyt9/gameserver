@@ -1,9 +1,9 @@
 package model
 
-import "github.com/beevik/guid"
+import "github.com/google/uuid"
 
 type Room struct {
-	ID     guid.Guid
+	ID     uuid.UUID
 	State  string
 	Status string
 }

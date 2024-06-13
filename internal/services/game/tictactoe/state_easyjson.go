@@ -4,7 +4,7 @@ package game
 
 import (
 	json "encoding/json"
-	guid "github.com/beevik/guid"
+	uuid "github.com/google/uuid"
 	easyjson "github.com/mailru/easyjson"
 	jlexer "github.com/mailru/easyjson/jlexer"
 	jwriter "github.com/mailru/easyjson/jwriter"
@@ -66,19 +66,17 @@ func easyjsonBd887cf1DecodeGameserverInternalServicesGameTictactoe(in *jlexer.Le
 				in.Delim('[')
 				if out.Players == nil {
 					if !in.IsDelim(']') {
-						out.Players = make([]guid.Guid, 0, 4)
+						out.Players = make([]uuid.UUID, 0, 4)
 					} else {
-						out.Players = []guid.Guid{}
+						out.Players = []uuid.UUID{}
 					}
 				} else {
 					out.Players = (out.Players)[:0]
 				}
 				for !in.IsDelim(']') {
-					var v3 guid.Guid
-					if in.IsNull() {
-						in.Skip()
-					} else {
-						copy(v3[:], in.Bytes())
+					var v3 uuid.UUID
+					if data := in.UnsafeBytes(); in.Ok() {
+						in.AddError((v3).UnmarshalText(data))
 					}
 					out.Players = append(out.Players, v3)
 					in.WantComma()
@@ -90,10 +88,8 @@ func easyjsonBd887cf1DecodeGameserverInternalServicesGameTictactoe(in *jlexer.Le
 		case "winner":
 			out.Winner = int(in.Int())
 		case "turn":
-			if in.IsNull() {
-				in.Skip()
-			} else {
-				copy(out.Turn[:], in.Bytes())
+			if data := in.UnsafeBytes(); in.Ok() {
+				in.AddError((out.Turn).UnmarshalText(data))
 			}
 		default:
 			in.SkipRecursive()
@@ -113,11 +109,11 @@ func easyjsonBd887cf1EncodeGameserverInternalServicesGameTictactoe(out *jwriter.
 		const prefix string = ",\"field\":"
 		out.RawString(prefix[1:])
 		out.RawByte('[')
-		for v6 := range in.Field {
-			if v6 > 0 {
+		for v4 := range in.Field {
+			if v4 > 0 {
 				out.RawByte(',')
 			}
-			out.Base64Bytes((in.Field)[v6][:])
+			out.Base64Bytes((in.Field)[v4][:])
 		}
 		out.RawByte(']')
 	}
@@ -128,11 +124,11 @@ func easyjsonBd887cf1EncodeGameserverInternalServicesGameTictactoe(out *jwriter.
 			out.RawString("null")
 		} else {
 			out.RawByte('[')
-			for v8, v9 := range in.Players {
-				if v8 > 0 {
+			for v6, v7 := range in.Players {
+				if v6 > 0 {
 					out.RawByte(',')
 				}
-				out.Base64Bytes(v9[:])
+				out.RawText((v7).MarshalText())
 			}
 			out.RawByte(']')
 		}
@@ -150,7 +146,7 @@ func easyjsonBd887cf1EncodeGameserverInternalServicesGameTictactoe(out *jwriter.
 	{
 		const prefix string = ",\"turn\":"
 		out.RawString(prefix)
-		out.Base64Bytes(in.Turn[:])
+		out.RawText((in.Turn).MarshalText())
 	}
 	out.RawByte('}')
 }
@@ -202,15 +198,15 @@ func easyjsonBd887cf1DecodeGameserverInternalServicesGameTictactoe1(in *jlexer.L
 				in.Skip()
 			} else {
 				in.Delim('[')
-				v12 := 0
+				v8 := 0
 				for !in.IsDelim(']') {
-					if v12 < 15 {
+					if v8 < 15 {
 						if in.IsNull() {
 							in.Skip()
 						} else {
-							copy((out.Field)[v12][:], in.Bytes())
+							copy((out.Field)[v8][:], in.Bytes())
 						}
-						v12++
+						v8++
 					} else {
 						in.SkipRecursive()
 					}
@@ -226,36 +222,30 @@ func easyjsonBd887cf1DecodeGameserverInternalServicesGameTictactoe1(in *jlexer.L
 				in.Delim('[')
 				if out.Players == nil {
 					if !in.IsDelim(']') {
-						out.Players = make([]guid.Guid, 0, 4)
+						out.Players = make([]uuid.UUID, 0, 4)
 					} else {
-						out.Players = []guid.Guid{}
+						out.Players = []uuid.UUID{}
 					}
 				} else {
 					out.Players = (out.Players)[:0]
 				}
 				for !in.IsDelim(']') {
-					var v14 guid.Guid
-					if in.IsNull() {
-						in.Skip()
-					} else {
-						copy(v14[:], in.Bytes())
+					var v10 uuid.UUID
+					if data := in.UnsafeBytes(); in.Ok() {
+						in.AddError((v10).UnmarshalText(data))
 					}
-					out.Players = append(out.Players, v14)
+					out.Players = append(out.Players, v10)
 					in.WantComma()
 				}
 				in.Delim(']')
 			}
 		case "turn":
-			if in.IsNull() {
-				in.Skip()
-			} else {
-				copy(out.Turn[:], in.Bytes())
+			if data := in.UnsafeBytes(); in.Ok() {
+				in.AddError((out.Turn).UnmarshalText(data))
 			}
 		case "you":
-			if in.IsNull() {
-				in.Skip()
-			} else {
-				copy(out.You[:], in.Bytes())
+			if data := in.UnsafeBytes(); in.Ok() {
+				in.AddError((out.You).UnmarshalText(data))
 			}
 		case "state":
 			out.State = string(in.String())
@@ -279,11 +269,11 @@ func easyjsonBd887cf1EncodeGameserverInternalServicesGameTictactoe1(out *jwriter
 		const prefix string = ",\"field\":"
 		out.RawString(prefix[1:])
 		out.RawByte('[')
-		for v18 := range in.Field {
-			if v18 > 0 {
+		for v11 := range in.Field {
+			if v11 > 0 {
 				out.RawByte(',')
 			}
-			out.Base64Bytes((in.Field)[v18][:])
+			out.Base64Bytes((in.Field)[v11][:])
 		}
 		out.RawByte(']')
 	}
@@ -294,11 +284,11 @@ func easyjsonBd887cf1EncodeGameserverInternalServicesGameTictactoe1(out *jwriter
 			out.RawString("null")
 		} else {
 			out.RawByte('[')
-			for v20, v21 := range in.Players {
-				if v20 > 0 {
+			for v13, v14 := range in.Players {
+				if v13 > 0 {
 					out.RawByte(',')
 				}
-				out.Base64Bytes(v21[:])
+				out.RawText((v14).MarshalText())
 			}
 			out.RawByte(']')
 		}
@@ -306,12 +296,12 @@ func easyjsonBd887cf1EncodeGameserverInternalServicesGameTictactoe1(out *jwriter
 	{
 		const prefix string = ",\"turn\":"
 		out.RawString(prefix)
-		out.Base64Bytes(in.Turn[:])
+		out.RawText((in.Turn).MarshalText())
 	}
 	{
 		const prefix string = ",\"you\":"
 		out.RawString(prefix)
-		out.Base64Bytes(in.You[:])
+		out.RawText((in.You).MarshalText())
 	}
 	{
 		const prefix string = ",\"state\":"

@@ -1,9 +1,9 @@
 package model
 
-import "github.com/beevik/guid"
+import uuid "github.com/google/uuid"
 
 type MatcherRoom struct {
-	ID            guid.Guid
+	ID            uuid.UUID
 	IsNew         bool   // новая комната
 	Status        string // wait/game
 	Players       []MatcherPlayer
@@ -14,11 +14,11 @@ type MatcherRoom struct {
 
 type MatcherPlayer struct {
 	IsNew    bool // новый игрок в комнате
-	PlayerID guid.Guid
+	PlayerID uuid.UUID
 }
 
 // запрос игрока на комнату
 type RoomQuery struct {
-	PlayerID guid.Guid
+	PlayerID uuid.UUID
 	GameID   string
 }

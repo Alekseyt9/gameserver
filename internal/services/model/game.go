@@ -1,8 +1,6 @@
 package model
 
-import (
-	"github.com/beevik/guid"
-)
+import "github.com/google/uuid"
 
 // общая информация об игре
 type GameInfo struct {
@@ -14,7 +12,7 @@ type GameInfo struct {
 type GameMsg struct {
 	Type     string
 	GameID   string
-	PlayerID guid.Guid
+	PlayerID uuid.UUID
 	Data     map[string]interface{}
 }
 
@@ -28,13 +26,13 @@ type InMsg struct {
 }
 
 type SendMessage struct {
-	PlayerID guid.Guid
+	PlayerID uuid.UUID
 	Message  string
 }
 
 type GameProcessor interface {
 	GetInfo() *GameInfo
-	Init(players []guid.Guid) (string, error)
+	Init(players []uuid.UUID) (string, error)
 	Process(ctx ProcessorCtx, state string, msg *GameMsg) error
 }
 

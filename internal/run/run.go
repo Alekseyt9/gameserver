@@ -27,6 +27,7 @@ func Run(cfg *Config) error {
 	if err != nil {
 		return err
 	}
+
 	pm := services.NewPlayerManager(s)
 	gm := services.NewGameManager(s, pm)
 	m, err := services.NewMatcher(s, pm, gm)
@@ -37,8 +38,7 @@ func Run(cfg *Config) error {
 
 	r := Router(s, pm, rm, cfg)
 
-	// TODO из командной строки или переменной окружения
-	err = r.Run(":8080")
+	err = r.Run(cfg.Address)
 	if err != nil {
 		return err
 	}

@@ -8,10 +8,10 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/beevik/guid"
-	"github.com/golang-migrate/migrate"
+	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres" // needs for init
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/google/uuid"
 )
 
 type DBStore struct {
@@ -42,7 +42,7 @@ func (s *DBStore) CreatePlayer(ctx context.Context, p *model.Player) error {
 	return err
 }
 
-func (s *DBStore) GetRoom(ctx context.Context, gameID string, playerID guid.Guid) (*model.Room, error) {
+func (s *DBStore) GetRoom(ctx context.Context, gameID string, playerID uuid.UUID) (*model.Room, error) {
 	row := s.conn.QueryRowContext(ctx, `
 		SELECT r.ID, r.State
 		FROM Rooms r 
@@ -50,7 +50,7 @@ func (s *DBStore) GetRoom(ctx context.Context, gameID string, playerID guid.Guid
 		WHERE r.GameType = $1 and rp.ID = $2 and not rp.IsQuit
 		`, gameID, playerID)
 
-	var id guid.Guid
+	var id uuid.UUID
 	var state string
 	err := row.Scan(&id, &state)
 	if err != nil {
@@ -60,7 +60,7 @@ func (s *DBStore) GetRoom(ctx context.Context, gameID string, playerID guid.Guid
 	return &model.Room{ID: id, State: state}, nil
 }
 
-func (s *DBStore) SetRoomState(ctx context.Context, roomID guid.Guid, state string) error {
+func (s *DBStore) SetRoomState(ctx context.Context, roomID uuid.UUID, state string) error {
 	_, err := s.conn.ExecContext(ctx, `
 		update Rooms
 		set State = $1
@@ -106,7 +106,7 @@ func (s *DBStore) CreateOrUpdateRooms(ctx context.Context, rooms []*model.Matche
 
 	for _, r := range rooms {
 		if r.IsNew {
-			_, err = stmtRoomInsert.ExecContext(ctx, guid.New(), r.GameID, r.Status, r.State)
+			_, err = stmtRoomInsert.ExecContext(ctx, uuid.New(), r.GameID, r.Status, r.State)
 			if err != nil {
 				return err
 			}
@@ -149,12 +149,12 @@ func (s *DBStore) LoadWaitingRooms(ctx context.Context) ([]*model.MatcherRoom, e
 	defer rows.Close()
 
 	var (
-		curRoomId guid.Guid
+		curRoomId uuid.UUID
 		room      *model.MatcherRoom
-		roomID    guid.Guid
+		roomID    uuid.UUID
 		gameID    string
 		status    string
-		playerID  *guid.Guid
+		playerID  *uuid.UUID
 	)
 
 	for rows.Next() {
@@ -186,7 +186,7 @@ func (s *DBStore) LoadWaitingRooms(ctx context.Context) ([]*model.MatcherRoom, e
 	return res, nil
 }
 
-func (s *DBStore) MarkDropRoomPlayer(ctx context.Context, roomID guid.Guid, playerID guid.Guid) error {
+func (s *DBStore) MarkDropRoomPlayer(ctx context.Context, roomID uuid.UUID, playerID uuid.UUID) error {
 	tx, err := s.conn.BeginTx(ctx, nil)
 	if err != nil {
 		return err

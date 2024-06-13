@@ -3,17 +3,17 @@ package services
 import (
 	"gameserver/internal/services/model"
 
-	"github.com/beevik/guid"
+	"github.com/google/uuid"
 )
 
 type GameProcessorCtx struct {
-	roomID       guid.Guid
+	roomID       uuid.UUID
 	gameID       string
 	gameState    string
 	sendMessages []model.SendMessage
 }
 
-func NewGameProcessorCtx(roomID guid.Guid, gameID string) *GameProcessorCtx {
+func NewGameProcessorCtx(roomID uuid.UUID, gameID string) *GameProcessorCtx {
 	return &GameProcessorCtx{
 		roomID:       roomID,
 		gameID:       gameID,

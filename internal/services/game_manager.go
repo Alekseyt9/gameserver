@@ -7,7 +7,7 @@ import (
 	"gameserver/internal/services/model"
 	"gameserver/internal/services/store"
 
-	"github.com/beevik/guid"
+	"github.com/google/uuid"
 )
 
 type GameManager struct {
@@ -64,7 +64,7 @@ func (m *GameManager) Init(gameID string, players []model.MatcherPlayer) (string
 		return "", err
 	}
 
-	gs := make([]guid.Guid, 0)
+	gs := make([]uuid.UUID, 0)
 	for _, p := range players {
 		gs = append(gs, p.PlayerID)
 	}

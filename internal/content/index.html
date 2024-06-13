@@ -197,13 +197,71 @@
             document.getElementById('modal').style.display = 'flex';
             document.body.classList.add('modal-open');
             //document.getElementById('game-iframe').src = 'content/matching/index.html';
-            document.getElementById('game-iframe').src = 'content/games/tictactoe/index.html';
+            //document.getElementById('game-iframe').src = 'content/games/tictactoe/index.html';
         });
 
         document.getElementById('close-btn').addEventListener('click', function() {
             document.getElementById('modal').style.display = 'none';
             document.body.classList.remove('modal-open');
         });
+
+        class GameManager {
+            constructor(wsm){
+                this.wsm = wsm;
+            }
+
+            async Register() {
+                try {
+                    const response = await fetch('/api/player/register', {
+                        method: 'POST',
+                        credentials: 'include' 
+                    });
+
+                    if (response.ok) {
+                        console.log('Player registered successfully');
+                    } else {
+                        console.error('Failed to register player');
+                    }
+                } catch (error) {
+                    console.error('Error during registration:', error);
+                }
+            }
+
+            async Connect() {
+                try {
+                    const response = await fetch('/api/room/connect', {
+                        method: 'POST',
+                        credentials: 'include' 
+                    });
+
+                    if (response.ok) {
+                        console.log('Connected to room successfully');
+                    } else {
+                        console.error('Failed to connect to room');
+                    }
+                } catch (error) {
+                    console.error('Error during connection:', error);
+                }
+            }
+
+            async Quit() {
+                try {
+                    const response = await fetch('/api/room/quit', {
+                        method: 'POST',
+                        credentials: 'include' 
+                    });
+
+                    if (response.ok) {
+                        console.log('Quit room successfully');
+                    } else {
+                        console.error('Failed to quit room');
+                    }
+                } catch (error) {
+                    console.error('Error during quit:', error);
+                }
+            }
+
+        }
 
         class WebSocketManager {
             constructor(url) {
@@ -244,26 +302,32 @@
             }
         }
 
-        var wsUrlElement = document.getElementById("ws-url");
-        var wsUrl = wsUrlElement ? wsUrlElement.textContent : "ws://default-url";
+        const wsUrlElement = document.getElementById("ws-url");
+        const wsUrl = wsUrlElement ? wsUrlElement.textContent : "ws://default-url";
 
-        /*
-        window.ws = new WebSocketManager(wsUrl);
-        const wsInstance = window.ws.getConnection();
+        const wsm = new WebSocketManager(wsUrl);
+        const gm = new GameManager(wsm)
+        window.gm = gm;
 
-        window.ws.subscribe('onopen', (event) => {
-            console.log("Connection opened!");
-            wsInstance.send("Hello, server!");
+        gm.Register().then(() => {
+            const ws = wsm.getConnection();
+
+            wsm.subscribe('onopen', (event) => {
+                console.log("Connection opened");
+            });
+
+            wsm.subscribe('onmessage', (event) => {
+                console.log("Received: " + event.data);
+            });
+
+            wsm.subscribe('onclose', (event) => {
+                console.log("Connection closed");
+            });
+        })
+        .catch(error => {
+            console.error('An error occurred:', error);
         });
 
-        window.ws.subscribe('onmessage', (event) => {
-            console.log("Received: " + event.data);
-        });
-
-        window.ws.subscribe('onclose', (event) => {
-            console.log("Connection closed");
-        });
-        */
     </script>
 
 </body>

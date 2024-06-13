@@ -37,10 +37,8 @@ func easyjson85f0d656DecodeGameserverInternalServicesModel(in *jlexer.Lexer, out
 		}
 		switch key {
 		case "PlayerID":
-			if in.IsNull() {
-				in.Skip()
-			} else {
-				copy(out.PlayerID[:], in.Bytes())
+			if data := in.UnsafeBytes(); in.Ok() {
+				in.AddError((out.PlayerID).UnmarshalText(data))
 			}
 		case "Message":
 			out.Message = string(in.String())
@@ -61,7 +59,7 @@ func easyjson85f0d656EncodeGameserverInternalServicesModel(out *jwriter.Writer, 
 	{
 		const prefix string = ",\"PlayerID\":"
 		out.RawString(prefix[1:])
-		out.Base64Bytes(in.PlayerID[:])
+		out.RawText((in.PlayerID).MarshalText())
 	}
 	{
 		const prefix string = ",\"Message\":"
@@ -126,15 +124,15 @@ func easyjson85f0d656DecodeGameserverInternalServicesModel1(in *jlexer.Lexer, ou
 				for !in.IsDelim('}') {
 					key := string(in.String())
 					in.WantColon()
-					var v3 interface{}
-					if m, ok := v3.(easyjson.Unmarshaler); ok {
+					var v1 interface{}
+					if m, ok := v1.(easyjson.Unmarshaler); ok {
 						m.UnmarshalEasyJSON(in)
-					} else if m, ok := v3.(json.Unmarshaler); ok {
+					} else if m, ok := v1.(json.Unmarshaler); ok {
 						_ = m.UnmarshalJSON(in.Raw())
 					} else {
-						v3 = in.Interface()
+						v1 = in.Interface()
 					}
-					(out.Data)[key] = v3
+					(out.Data)[key] = v1
 					in.WantComma()
 				}
 				in.Delim('}')
@@ -170,21 +168,21 @@ func easyjson85f0d656EncodeGameserverInternalServicesModel1(out *jwriter.Writer,
 			out.RawString(`null`)
 		} else {
 			out.RawByte('{')
-			v4First := true
-			for v4Name, v4Value := range in.Data {
-				if v4First {
-					v4First = false
+			v2First := true
+			for v2Name, v2Value := range in.Data {
+				if v2First {
+					v2First = false
 				} else {
 					out.RawByte(',')
 				}
-				out.String(string(v4Name))
+				out.String(string(v2Name))
 				out.RawByte(':')
-				if m, ok := v4Value.(easyjson.Marshaler); ok {
+				if m, ok := v2Value.(easyjson.Marshaler); ok {
 					m.MarshalEasyJSON(out)
-				} else if m, ok := v4Value.(json.Marshaler); ok {
+				} else if m, ok := v2Value.(json.Marshaler); ok {
 					out.Raw(m.MarshalJSON())
 				} else {
-					out.Raw(json.Marshal(v4Value))
+					out.Raw(json.Marshal(v2Value))
 				}
 			}
 			out.RawByte('}')
@@ -240,10 +238,8 @@ func easyjson85f0d656DecodeGameserverInternalServicesModel2(in *jlexer.Lexer, ou
 		case "GameID":
 			out.GameID = string(in.String())
 		case "PlayerID":
-			if in.IsNull() {
-				in.Skip()
-			} else {
-				copy(out.PlayerID[:], in.Bytes())
+			if data := in.UnsafeBytes(); in.Ok() {
+				in.AddError((out.PlayerID).UnmarshalText(data))
 			}
 		case "Data":
 			if in.IsNull() {
@@ -254,15 +250,15 @@ func easyjson85f0d656DecodeGameserverInternalServicesModel2(in *jlexer.Lexer, ou
 				for !in.IsDelim('}') {
 					key := string(in.String())
 					in.WantColon()
-					var v6 interface{}
-					if m, ok := v6.(easyjson.Unmarshaler); ok {
+					var v3 interface{}
+					if m, ok := v3.(easyjson.Unmarshaler); ok {
 						m.UnmarshalEasyJSON(in)
-					} else if m, ok := v6.(json.Unmarshaler); ok {
+					} else if m, ok := v3.(json.Unmarshaler); ok {
 						_ = m.UnmarshalJSON(in.Raw())
 					} else {
-						v6 = in.Interface()
+						v3 = in.Interface()
 					}
-					(out.Data)[key] = v6
+					(out.Data)[key] = v3
 					in.WantComma()
 				}
 				in.Delim('}')
@@ -294,7 +290,7 @@ func easyjson85f0d656EncodeGameserverInternalServicesModel2(out *jwriter.Writer,
 	{
 		const prefix string = ",\"PlayerID\":"
 		out.RawString(prefix)
-		out.Base64Bytes(in.PlayerID[:])
+		out.RawText((in.PlayerID).MarshalText())
 	}
 	{
 		const prefix string = ",\"Data\":"
@@ -303,21 +299,21 @@ func easyjson85f0d656EncodeGameserverInternalServicesModel2(out *jwriter.Writer,
 			out.RawString(`null`)
 		} else {
 			out.RawByte('{')
-			v8First := true
-			for v8Name, v8Value := range in.Data {
-				if v8First {
-					v8First = false
+			v4First := true
+			for v4Name, v4Value := range in.Data {
+				if v4First {
+					v4First = false
 				} else {
 					out.RawByte(',')
 				}
-				out.String(string(v8Name))
+				out.String(string(v4Name))
 				out.RawByte(':')
-				if m, ok := v8Value.(easyjson.Marshaler); ok {
+				if m, ok := v4Value.(easyjson.Marshaler); ok {
 					m.MarshalEasyJSON(out)
-				} else if m, ok := v8Value.(json.Marshaler); ok {
+				} else if m, ok := v4Value.(json.Marshaler); ok {
 					out.Raw(m.MarshalJSON())
 				} else {
-					out.Raw(json.Marshal(v8Value))
+					out.Raw(json.Marshal(v4Value))
 				}
 			}
 			out.RawByte('}')

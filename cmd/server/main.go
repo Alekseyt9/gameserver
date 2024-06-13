@@ -12,6 +12,9 @@ type PageData struct {
 
 func main() {
 	cfg := &run.Config{}
+	ParseFlags(cfg)
+	SetEnv(cfg)
+
 	err := run.Run(cfg)
 	if err != nil {
 		panic("Ошибка запуска сервера: " + err.Error())

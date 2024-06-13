@@ -6,7 +6,7 @@ import (
 	"gameserver/internal/services/model"
 	"math/rand"
 
-	"github.com/beevik/guid"
+	"github.com/google/uuid"
 )
 
 type TTCProcessor struct {
@@ -37,7 +37,7 @@ func (p *TTCProcessor) GetInfo() *model.GameInfo {
 	}
 }
 
-func (p *TTCProcessor) Init(players []guid.Guid) (string, error) {
+func (p *TTCProcessor) Init(players []uuid.UUID) (string, error) {
 	return start(players)
 }
 
@@ -73,7 +73,7 @@ func (p *TTCProcessor) Process(ctx model.ProcessorCtx, st string, msg *model.Gam
 }
 
 // создать сообщение об ошибке
-func createErrorMsg(playerID guid.Guid, s string) model.SendMessage {
+func createErrorMsg(playerID uuid.UUID, s string) model.SendMessage {
 	return model.SendMessage{
 		PlayerID: playerID,
 		Message: fmt.Sprintf(`
@@ -92,7 +92,7 @@ func createErrorMsg(playerID guid.Guid, s string) model.SendMessage {
 }
 
 // сделать ход
-func move(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage, playerID guid.Guid) error {
+func move(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage, playerID uuid.UUID) error {
 	if playerID != s.Turn {
 		ctx.AddSendMessage(createErrorMsg(playerID, "Сейчас ход другого игрока"))
 		return nil
@@ -141,7 +141,7 @@ func move(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage, playerID guid.Guid
 }
 
 // фигура игрока
-func figureOf(s *TTTState, playerID guid.Guid) byte {
+func figureOf(s *TTTState, playerID uuid.UUID) byte {
 	// у первого - крестик
 	if s.Players[0] == playerID {
 		return 1
@@ -150,7 +150,7 @@ func figureOf(s *TTTState, playerID guid.Guid) byte {
 }
 
 // противоположный игрок
-func oppositeOf(s *TTTState, playerID guid.Guid) guid.Guid {
+func oppositeOf(s *TTTState, playerID uuid.UUID) uuid.UUID {
 	p := s.Players[0]
 	if p == playerID {
 		p = s.Players[1]
@@ -158,7 +158,7 @@ func oppositeOf(s *TTTState, playerID guid.Guid) guid.Guid {
 	return p
 }
 
-func indexOf(s *TTTState, playerID guid.Guid) int {
+func indexOf(s *TTTState, playerID uuid.UUID) int {
 	for i, v := range s.Players {
 		if v == playerID {
 			return i
@@ -168,7 +168,7 @@ func indexOf(s *TTTState, playerID guid.Guid) int {
 }
 
 // игрок покинул комнату
-func quit(ctx model.ProcessorCtx, s *TTTState, playerID guid.Guid) error {
+func quit(ctx model.ProcessorCtx, s *TTTState, playerID uuid.UUID) error {
 	if len(s.Players) == 2 {
 		winner := oppositeOf(s, playerID)
 		s.Winner = indexOf(s, winner)
@@ -186,7 +186,7 @@ func quit(ctx model.ProcessorCtx, s *TTTState, playerID guid.Guid) error {
 }
 
 // создаем игроков в state, определяем первый ход
-func start(players []guid.Guid) (string, error) {
+func start(players []uuid.UUID) (string, error) {
 	s := &TTTState{
 		State:  "game",
 		Turn:   players[rand.Intn(2)],
@@ -195,9 +195,9 @@ func start(players []guid.Guid) (string, error) {
 
 	// крестик ходит первый
 	if s.Turn == players[0] {
-		s.Players = []guid.Guid{players[0], players[1]}
+		s.Players = []uuid.UUID{players[0], players[1]}
 	} else {
-		s.Players = []guid.Guid{players[1], players[0]}
+		s.Players = []uuid.UUID{players[1], players[0]}
 	}
 
 	json, err := stateToStr(s)
@@ -208,7 +208,7 @@ func start(players []guid.Guid) (string, error) {
 	return json, nil
 }
 
-func state(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage, playerID guid.Guid) error {
+func state(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage, playerID uuid.UUID) error {
 	msg, err := createStateSendMsg(s, playerID)
 	if err != nil {
 		return err
@@ -268,7 +268,7 @@ func createMoveData(s string) (*TTTMoveData, error) {
 }
 
 // создать сообщение с состоянием игры для посылки игроку
-func createStateSendMsg(s *TTTState, playerID guid.Guid) (*model.SendMessage, error) {
+func createStateSendMsg(s *TTTState, playerID uuid.UUID) (*model.SendMessage, error) {
 	ss := TTTSendState{
 		Field:   s.Field,
 		Players: s.Players,

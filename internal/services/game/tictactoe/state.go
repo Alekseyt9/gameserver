@@ -1,24 +1,24 @@
 package game
 
-import "github.com/beevik/guid"
+import "github.com/google/uuid"
 
 // состояние в базе
 //easyjson:json
 type TTTState struct {
 	Field   [15][15]byte `json:"field"`
-	Players []guid.Guid  `json:"players"`
+	Players []uuid.UUID  `json:"players"`
 	State   string       `json:"state"`
 	Winner  int          `json:"winner"`
-	Turn    guid.Guid    `json:"turn"`
+	Turn    uuid.UUID    `json:"turn"`
 }
 
 // состояние для посылки игрокам
 //easyjson:json
 type TTTSendState struct {
 	Field   [15][15]byte `json:"field"`
-	Players []guid.Guid  `json:"players"`
-	Turn    guid.Guid    `json:"turn"`
-	You     guid.Guid    `json:"you"`
+	Players []uuid.UUID  `json:"players"`
+	Turn    uuid.UUID    `json:"turn"`
+	You     uuid.UUID    `json:"you"`
 	State   string       `json:"state"`
 	Winner  int          `json:"winner"`
 }

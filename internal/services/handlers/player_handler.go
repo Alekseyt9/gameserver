@@ -5,13 +5,13 @@ import (
 	"math/rand"
 	"net/http"
 
-	"github.com/beevik/guid"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 func (h *Handler) RegisterPlayer(c *gin.Context) {
 	player := model.Player{
-		ID:   *guid.New(),
+		ID:   uuid.New(),
 		Name: "player" + h.generateRandomString(5),
 	}
 
