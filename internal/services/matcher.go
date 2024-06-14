@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"gameserver/internal/services/model"
 	"gameserver/internal/services/store"
-	"log"
+	"log/slog"
 	"sync"
 	"time"
 
@@ -19,6 +19,7 @@ type Matcher struct {
 	queue         *MatcherQueue             // очередь игроков, кому нужна комната.
 	rooms         map[string]*GameRoomGroup // комнаты, сгруппированные по играм.
 	store         store.Store
+	log           *slog.Logger
 }
 
 type GameRoomGroup struct {
@@ -35,7 +36,7 @@ const (
 	taskInterval = 500
 )
 
-func NewMatcher(store store.Store, pm *PlayerManager, gm *GameManager) (*Matcher, error) {
+func NewMatcher(store store.Store, pm *PlayerManager, gm *GameManager, log *slog.Logger) (*Matcher, error) {
 	m := &Matcher{
 		queue: &MatcherQueue{
 			list: list.New(),
@@ -43,6 +44,7 @@ func NewMatcher(store store.Store, pm *PlayerManager, gm *GameManager) (*Matcher
 		store:         store,
 		playerManager: pm,
 		gameManager:   gm,
+		log:           log,
 	}
 
 	ctx := context.Background()
@@ -57,7 +59,7 @@ func NewMatcher(store store.Store, pm *PlayerManager, gm *GameManager) (*Matcher
 		for {
 			err = m.doMatching(ctx)
 			if err != nil {
-				log.Printf("m.doMatching error: %v", err)
+				m.log.Error("m.doMatching error", err)
 			}
 			time.Sleep(time.Microsecond * taskInterval)
 		}
@@ -107,6 +109,9 @@ func (m *Matcher) CheckAndAdd(q model.RoomQuery) bool {
 
 func (m *Matcher) doMatching(ctx context.Context) error {
 	s := m.queueToSlice()
+	if len(s) == 0 {
+		return nil
+	}
 
 	rooms, err := m.processRooms(s)
 	if err != nil {

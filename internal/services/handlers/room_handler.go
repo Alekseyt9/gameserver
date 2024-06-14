@@ -13,7 +13,6 @@ type RoomRequest struct {
 }
 
 func (h *Handler) ConnectRoom(c *gin.Context) {
-	// TODO вынести в middleware
 	pID, err := c.Cookie("playerID")
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "PlayerID cookie not found"})
@@ -45,11 +44,12 @@ func (h *Handler) ConnectRoom(c *gin.Context) {
 		a["contentLink"] = conRes.ContentLink
 	}
 
+	h.log.Info("ConnectRoom", "playerID", playerID.String(), "result", conRes.State)
+
 	c.JSON(http.StatusOK, a)
 }
 
 func (h *Handler) QuitRoom(c *gin.Context) {
-	// TODO вынести в middleware
 	plID, err := c.Cookie("playerID")
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "PlayerID cookie not found"})
@@ -68,6 +68,8 @@ func (h *Handler) QuitRoom(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	h.log.Info("QuitRoom", "playerID", playerID.String())
 
 	err = h.roomManager.PlayerQuit(c.Request.Context(), req.GameID, playerID)
 	if err != nil {

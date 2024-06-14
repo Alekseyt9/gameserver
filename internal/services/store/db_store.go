@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"gameserver/internal/services/model"
+	"log/slog"
 	"path/filepath"
 	"runtime"
 
@@ -16,9 +17,10 @@ import (
 
 type DBStore struct {
 	conn *sql.DB
+	log  *slog.Logger
 }
 
-func NewDBStore(connString string) (Store, error) {
+func NewDBStore(connString string, log *slog.Logger) (Store, error) {
 	conn, err := sql.Open("pgx", connString)
 	if err != nil {
 		return nil, err
@@ -31,6 +33,7 @@ func NewDBStore(connString string) (Store, error) {
 
 	return &DBStore{
 		conn: conn,
+		log:  log,
 	}, nil
 }
 
@@ -59,15 +62,15 @@ func (s *DBStore) GetPlayer(ctx context.Context, playerID uuid.UUID) (*model.Pla
 
 func (s *DBStore) GetRoom(ctx context.Context, gameID string, playerID uuid.UUID) (*model.Room, error) {
 	row := s.conn.QueryRowContext(ctx, `
-		SELECT r.Id, r.State
+		SELECT r.Id, r.State, r.Status
 		FROM Rooms r 
 		join RoomPlayers rp on rp.RoomID = r.Id 
 		WHERE r.GameId = $1 and rp.PlayerId = $2 and not rp.IsQuit
 		`, gameID, playerID)
 
-	var id uuid.UUID
-	var state string
-	err := row.Scan(&id, &state)
+	res := &model.Room{}
+	err := row.Scan(&res.ID, &res.State, &res.Status)
+
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, ErrNotFound
@@ -75,7 +78,7 @@ func (s *DBStore) GetRoom(ctx context.Context, gameID string, playerID uuid.UUID
 		return nil, err
 	}
 
-	return &model.Room{ID: id, State: state}, nil
+	return res, nil
 }
 
 func (s *DBStore) SetRoomState(ctx context.Context, roomID uuid.UUID, state string) error {
@@ -105,8 +108,8 @@ func (s *DBStore) CreateOrUpdateRooms(ctx context.Context, rooms []*model.Matche
 
 	stmtRoomUpdate, err := tx.PrepareContext(ctx, `
 		update Rooms
-		set Status = $1, State = $3
-		where Id = $2
+		set Status = $2, State = $3
+		where Id = $1
 	`)
 	if err != nil {
 		return err
@@ -122,7 +125,7 @@ func (s *DBStore) CreateOrUpdateRooms(ctx context.Context, rooms []*model.Matche
 	}
 	defer stmtRoomPlayerInsert.Close()
 
-	err = storeRooms(ctx, rooms, stmtRoomInsert, stmtRoomUpdate, stmtRoomPlayerInsert)
+	err = s.storeRooms(ctx, rooms, stmtRoomInsert, stmtRoomUpdate, stmtRoomPlayerInsert)
 	if err != nil {
 		return err
 	}
@@ -130,7 +133,7 @@ func (s *DBStore) CreateOrUpdateRooms(ctx context.Context, rooms []*model.Matche
 	return tx.Commit()
 }
 
-func storeRooms(
+func (s *DBStore) storeRooms(
 	ctx context.Context,
 	rooms []*model.MatcherRoom,
 	stmtRoomInsert *sql.Stmt,
@@ -139,16 +142,18 @@ func storeRooms(
 	for _, r := range rooms {
 		if r.IsNew {
 			var err error
-			_, err = stmtRoomInsert.ExecContext(ctx, uuid.New(), r.GameID, r.Status, r.State)
+			_, err = stmtRoomInsert.ExecContext(ctx, r.ID, r.GameID, r.Status, r.State)
 			if err != nil {
 				return err
 			}
+			s.log.Debug("room inserted", "ID", r.ID, "GameID", r.GameID, "Status", r.Status, "State", r.State)
 		} else if r.StatusChanged {
 			var err error
-			_, err = stmtRoomUpdate.ExecContext(ctx, r.Status, r.State)
+			_, err = stmtRoomUpdate.ExecContext(ctx, r.ID, r.Status, r.State)
 			if err != nil {
 				return err
 			}
+			s.log.Debug("room updated", "ID", r.ID, "GameID", r.GameID, "Status", r.Status, "State", r.State)
 		}
 
 		for _, p := range r.Players {
@@ -158,6 +163,7 @@ func storeRooms(
 				if err != nil {
 					return err
 				}
+				s.log.Debug("roomPlayer inserted", "PlayerID", p.PlayerID, "RoomID", r.ID)
 			}
 		}
 	}

@@ -2,7 +2,7 @@ package services
 
 import (
 	"gameserver/internal/services/model"
-	"log"
+	"log/slog"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -12,12 +12,14 @@ import (
 type WebSocketManager struct {
 	playerManager *PlayerManager
 	roomManager   *RoomManager
+	log           *slog.Logger
 }
 
-func NewWSManager(router *gin.Engine, pm *PlayerManager, rm *RoomManager) *WebSocketManager {
+func NewWSManager(router *gin.Engine, pm *PlayerManager, rm *RoomManager, log *slog.Logger) *WebSocketManager {
 	m := &WebSocketManager{
 		playerManager: pm,
 		roomManager:   rm,
+		log:           log,
 	}
 
 	ws := melody.New()
@@ -25,14 +27,14 @@ func NewWSManager(router *gin.Engine, pm *PlayerManager, rm *RoomManager) *WebSo
 	router.GET("/ws", func(c *gin.Context) {
 		err := ws.HandleRequest(c.Writer, c.Request)
 		if err != nil {
-			log.Printf("ws.HandleRequest error: %v", err)
+			m.log.Error("ws.HandleRequest error", err)
 		}
 	})
 
 	ws.HandleConnect(func(s *melody.Session) {
 		playerID, err := getPlayerID(s)
 		if err != nil {
-			log.Printf("Ошибка получения playerID из куки")
+			m.log.Error("Ошибка получения playerID из куки")
 		}
 
 		sendCh := m.playerManager.GetOrCreateChan(*playerID)
@@ -41,7 +43,7 @@ func NewWSManager(router *gin.Engine, pm *PlayerManager, rm *RoomManager) *WebSo
 			for msg := range sendCh {
 				err = s.Write([]byte(msg.Message))
 				if err != nil {
-					log.Printf("failed to write message: %v", err)
+					m.log.Error("failed to write message", err)
 				}
 			}
 		}()
@@ -51,7 +53,7 @@ func NewWSManager(router *gin.Engine, pm *PlayerManager, rm *RoomManager) *WebSo
 	ws.HandleDisconnect(func(s *melody.Session) {
 		playerID, err := getPlayerID(s)
 		if err != nil {
-			log.Printf("Ошибка получения playerID из куки")
+			m.log.Error("Ошибка получения playerID из куки")
 		}
 
 		m.playerManager.DeleteChan(*playerID)
@@ -60,18 +62,18 @@ func NewWSManager(router *gin.Engine, pm *PlayerManager, rm *RoomManager) *WebSo
 	ws.HandleMessage(func(s *melody.Session, data []byte) {
 		playerID, err := getPlayerID(s)
 		if err != nil {
-			log.Printf("Ошибка получения playerID из куки %v", err)
+			m.log.Error("Ошибка получения playerID из куки", err)
 		}
 
 		msg, err := createGameMsg(data, *playerID)
 		if err != nil {
-			log.Printf("Ошибка создания GameMsg %v", err)
+			m.log.Error("Ошибка создания GameMsg", err)
 		}
 
 		// комната уже есть, тк в игре
 		room, err := m.roomManager.GetExistingRoom(s.Request.Context(), msg.GameID, msg.PlayerID)
 		if err != nil {
-			log.Printf("Ошибка получения комнаты %v", err)
+			m.log.Error("Ошибка получения комнаты %v", err)
 		}
 
 		ch := m.roomManager.GetOrCreateChan(room.ID)

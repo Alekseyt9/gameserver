@@ -2,7 +2,9 @@ package run
 
 import (
 	"html/template"
+	"log/slog"
 	"net/http"
+	"os"
 	"path/filepath"
 
 	"github.com/gin-contrib/gzip"
@@ -23,21 +25,22 @@ type Config struct {
 }
 
 func Run(cfg *Config) error {
-	s, err := store.NewDBStore(cfg.DataBaseDSN)
+	log := slog.New(slog.NewTextHandler(os.Stdout, nil))
+
+	s, err := store.NewDBStore(cfg.DataBaseDSN, log)
 	if err != nil {
 		return err
 	}
 
 	pm := services.NewPlayerManager(s)
 	gm := services.NewGameManager(s, pm)
-	m, err := services.NewMatcher(s, pm, gm)
+	m, err := services.NewMatcher(s, pm, gm, log)
 	if err != nil {
 		return err
 	}
-	rm := services.NewRoomManager(s, gm, pm, m)
+	rm := services.NewRoomManager(s, gm, pm, m, log)
 
-	r := Router(s, pm, rm, cfg)
-
+	r := Router(s, pm, rm, cfg, log)
 	err = r.Run(cfg.Address)
 	if err != nil {
 		return err
@@ -45,17 +48,17 @@ func Run(cfg *Config) error {
 	return nil
 }
 
-func Router(s store.Store, pm *services.PlayerManager, rm *services.RoomManager, cfg *Config) *gin.Engine {
+func Router(s store.Store, pm *services.PlayerManager, rm *services.RoomManager, cfg *Config, log *slog.Logger) *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
-	services.NewWSManager(r, pm, rm)
+	services.NewWSManager(r, pm, rm, log)
 	setupFileServer(r, cfg)
-	setupHandlers(r, s, rm)
+	setupHandlers(r, s, rm, log)
 	return r
 }
 
-func setupHandlers(r *gin.Engine, s store.Store, rm *services.RoomManager) {
-	h := handlers.New(s, rm)
+func setupHandlers(r *gin.Engine, s store.Store, rm *services.RoomManager, log *slog.Logger) {
+	h := handlers.New(s, rm, log)
 	r.POST("/api/player/register", h.RegisterPlayer)
 	r.POST("/api/room/connect", h.ConnectRoom)
 	r.POST("/api/room/quit", h.QuitRoom)

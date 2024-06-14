@@ -5,7 +5,7 @@ import (
 	"errors"
 	"gameserver/internal/services/model"
 	"gameserver/internal/services/store"
-	"log"
+	"log/slog"
 	"sync"
 
 	"github.com/google/uuid"
@@ -18,6 +18,7 @@ type RoomManager struct {
 	matcher       *Matcher
 	chanMap       map[uuid.UUID]chan model.GameMsg
 	chanLock      sync.RWMutex
+	log           *slog.Logger
 }
 
 type PlayerConnectResult struct {
@@ -29,13 +30,14 @@ const (
 	chanBuffer = 100
 )
 
-func NewRoomManager(store store.Store, gm *GameManager, pm *PlayerManager, m *Matcher) *RoomManager {
+func NewRoomManager(store store.Store, gm *GameManager, pm *PlayerManager, m *Matcher, log *slog.Logger) *RoomManager {
 	return &RoomManager{
 		store:         store,
 		gameManager:   gm,
 		chanMap:       make(map[uuid.UUID]chan model.GameMsg, chanBuffer),
 		matcher:       m,
 		playerManager: pm,
+		log:           log,
 	}
 }
 
@@ -54,12 +56,12 @@ func (m *RoomManager) GetOrCreateChan(roomID uuid.UUID) chan model.GameMsg {
 			for msg := range ch {
 				gctx, err := m.gameManager.Process(ctx, &msg)
 				if err != nil {
-					log.Printf("m.gameManager.Process error: %v", err)
+					m.log.Error("m.gameManager.Process error", err)
 				}
 
 				err = m.processResult(gctx)
 				if err != nil {
-					log.Printf("m.processResult error: %v", err)
+					m.log.Error("m.processResult error", err)
 				}
 			}
 		}()
