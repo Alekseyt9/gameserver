@@ -1,37 +1,100 @@
-<doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 	<title>Websocket client</title>
-	<!--<link rel="stylesheet" href="styles.css">-->
+	<link rel="stylesheet" href="../../pico.min.css">
 	<style>
-		
 		body, html {
 			margin: 0;
 			padding: 0;
-			overflow: hidden;  
+			overflow: hidden;
+			height: 100vh;
+			display: flex;
+			flex-direction: column;
 		}
 
 		#canvas-container {
 			display: flex;
 			justify-content: center;
 			align-items: center;
-			height: 100vh; 
+			flex: 1;
+			background-color: #f0f0f0; 
 		}
-  
+
+		#board {
+			border: 1px solid #000;
+			background-color: #ffffff; 
+		}
+
+		#top-panel {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			height: 50px;
+			background-color: var(--primary);
+			color: var(--background);
+			padding: 0 20px;
+			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+			position: relative;
+		}
+
+		#title {
+			position: absolute;
+			left: 50%;
+			transform: translateX(-50%);
+			font-size: 24px;
+			font-weight: bold;
+		}
+
+		#exit-button {
+			background-color: #d3a87c; 
+			color: #ffffff; 
+			border: none;
+			padding: 10px 20px;
+			cursor: pointer;
+			font-size: 16px;
+			border-radius: 4px;
+			width: auto; 
+		}
+
+		#exit-button:hover {
+			background-color: #c08d60; 
+		}
+
+		/*
+		#exit-button {
+			background-color: var(--contrast);
+			color: var(--background);
+			border: none;
+			padding: 10px 20px;
+			cursor: pointer;
+			font-size: 16px;
+			border-radius: 4px;
+			width: auto; 
+		}
+
+		#exit-button:hover {
+			background-color: var(--contrast-dark);
+		}*/
+
 	</style>
 </head>
 <body>
-	<div id="canvas-container">
-		<svg id="board" width="600" height="600"></svg>
+	<div id="top-panel">
+		<span id="title">Игра</span>
+		<button id="exit-button">Выйти из игры</button>
 	</div>
-	<!--<script src="script.js"></script>-->
+	<div id="canvas-container">
+		<svg id="board" width="100%" height="100%"></svg>
+	</div>
+	
 	<script>
 		resizeBoard();
 
 		const svgElement = document.getElementById('board');
 		const count = 15;
 
-		let board = document.getElementById('board');
+		let board = document.getElementById('canvas-container');
 		let height = board.scrollHeight;
 		let width = board.scrollWidth;
 
@@ -114,5 +177,6 @@
 		}
 
 	</script>
+	
 </body>
 </html>

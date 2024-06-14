@@ -144,7 +144,7 @@
             background-size: contain;
             z-index: 1010;
             /*background-color: gray;*/
-            color: gray
+            color: rgb(255, 255, 255)
         }
     </style>
 </head>
@@ -214,13 +214,14 @@
                 try {
                     const response = await fetch('/api/player/register', {
                         method: 'POST',
-                        credentials: 'include' 
+                        credentials: 'include'
                     });
 
                     if (response.ok) {
                         console.log('Player registered successfully');
                     } else {
-                        console.error('Failed to register player:', errorText);
+                        const errorBody = await response.text(); 
+                        console.error('Failed to register player:', errorBody);
                     }
                 } catch (error) {
                     console.error('Error during registration:', error);

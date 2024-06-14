@@ -78,7 +78,7 @@ func setupFileServer(r *gin.Engine, cfg *Config) {
 		tmplPath := filepath.Join(contentDir, "index.html")
 		tmpl := template.Must(template.ParseFiles(tmplPath))
 
-		wsURL := "ws" + cfg.Address[len("http"):] + "/ws"
+		wsURL := "ws://" + cfg.Address + "/ws"
 		data := PageData{
 			WebSocketURL: wsURL,
 		}
