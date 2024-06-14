@@ -41,10 +41,13 @@ func Run(cfg *Config) error {
 	rm := services.NewRoomManager(s, gm, pm, m, log)
 
 	r := Router(s, pm, rm, cfg, log)
+
+	log.Info("Server started", "url", cfg.Address)
 	err = r.Run(cfg.Address)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
