@@ -15,12 +15,8 @@ const (
 
 func (h *Handler) RegisterPlayer(c *gin.Context) {
 	pID, err := c.Cookie("playerID")
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "c.Cookie(playerID)"})
-		return
-	}
 
-	if pID != "" {
+	if pID != "" && err == nil {
 		var playerID uuid.UUID
 		playerID, err = uuid.Parse(pID)
 		if err != nil {
