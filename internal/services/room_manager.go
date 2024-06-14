@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"gameserver/internal/services/model"
 	"gameserver/internal/services/store"
 	"log"
@@ -106,7 +107,7 @@ func (m *RoomManager) PlayerConnect(
 	playerID uuid.UUID,
 	gameID string) (*PlayerConnectResult, error) {
 	room, err := m.GetExistingRoom(ctx, gameID, playerID)
-	if err != nil {
+	if err != nil && !errors.Is(err, store.ErrNotFound) {
 		return nil, err
 	}
 

@@ -3,6 +3,7 @@ package test
 import (
 	"context"
 	"gameserver/internal/services/model"
+	"gameserver/internal/services/store"
 	"sync"
 
 	"github.com/google/uuid"
@@ -53,7 +54,7 @@ func (s *MemStore) GetPlayer(_ context.Context, playerID uuid.UUID) (*model.Play
 			Name: p.Name,
 		}, nil
 	}
-	return nil, nil
+	return nil, store.ErrNotFound
 }
 
 func (s *MemStore) CreatePlayer(_ context.Context, p *model.Player) error {

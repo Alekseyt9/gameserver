@@ -2,6 +2,7 @@ package game
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"gameserver/internal/services/model"
 	"math/rand"
@@ -281,7 +282,7 @@ func createGameMessage(msg *model.GameMsg) (*TTTMessage, error) {
 		}
 		return m, nil
 	}
-	return nil, nil
+	return nil, errors.New("wrong msg format")
 }
 
 func createMoveData(s string) (*TTTMoveData, error) {
