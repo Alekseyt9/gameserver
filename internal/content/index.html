@@ -206,13 +206,14 @@
         });
 
         class GameManager {
-            constructor(wsm){
+            constructor(wsm, url){
                 this.wsm = wsm;
+                this.url = url;
             }
 
             async Register() {
                 try {
-                    const response = await fetch('/api/player/register', {
+                    const response = await fetch("http://"+this.url+'/api/player/register', {
                         method: 'POST',
                         credentials: 'include'
                     });
@@ -230,7 +231,7 @@
 
             async Connect(gameID) {
                 try {
-                    const response = await fetch('/api/room/connect', {
+                    const response = await fetch("http://"+this.url+'/api/room/connect', {
                         method: 'POST',
                         credentials: 'include',
                         headers: {
@@ -257,7 +258,7 @@
 
             async Quit(gameID) {
                 try {
-                    const response = await fetch('/api/room/quit', {
+                    const response = await fetch("http://"+this.url+'/api/room/quit', {
                         method: 'POST',
                         credentials: 'include',
                         headers: {
@@ -323,10 +324,10 @@
         }
 
         const wsUrlElement = document.getElementById("ws-url");
-        const wsUrl = wsUrlElement ? wsUrlElement.textContent : "ws://default-url";
+        const wsUrl = wsUrlElement ? "ws://" + wsUrlElement.textContent + "/ws": "ws://default-url";
 
         const wsm = new WebSocketManager(wsUrl);
-        const gm = new GameManager(wsm)
+        const gm = new GameManager(wsm, wsUrlElement.textContent)
         window.gm = gm;
 
         gm.Register().then(() => {
