@@ -28,7 +28,6 @@
 
 		#top-panel {
 			display: flex;
-			justify-content: space-between;
 			align-items: center;
 			height: 50px;
 			background-color: var(--primary);
@@ -36,14 +35,15 @@
 			padding: 0 20px;
 			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 			position: relative;
+			justify-content: center;
 		}
 
 		#title {
+			font-size: 24px;
+			font-weight: bold;
 			position: absolute;
 			left: 50%;
 			transform: translateX(-50%);
-			font-size: 24px;
-			font-weight: bold;
 		}
 
 		#exit-button {
@@ -55,27 +55,13 @@
 			font-size: 16px;
 			border-radius: 4px;
 			width: auto; 
+			position: absolute;
+			right: 50px; /* Сместить кнопку левее */
 		}
 
 		#exit-button:hover {
 			background-color: #c08d60; 
 		}
-
-		/*
-		#exit-button {
-			background-color: var(--contrast);
-			color: var(--background);
-			border: none;
-			padding: 10px 20px;
-			cursor: pointer;
-			font-size: 16px;
-			border-radius: 4px;
-			width: auto; 
-		}
-
-		#exit-button:hover {
-			background-color: var(--contrast-dark);
-		}*/
 
 	</style>
 </head>
