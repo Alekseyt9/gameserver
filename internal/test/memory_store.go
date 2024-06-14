@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// для тестов
+// для тестов.
 type MemStore struct {
 	rooms       map[uuid.UUID]*MSRoom
 	players     map[uuid.UUID]*MSPlayer
@@ -113,13 +113,11 @@ func (s *MemStore) CreateOrUpdateRooms(_ context.Context, rooms []*model.Matcher
 				State:  r.State,
 				Status: r.Status,
 			}
-		} else {
-			if r.StatusChanged {
-				old, ok := s.rooms[r.ID]
-				if ok {
-					old.Status = r.Status
-					old.State = r.State
-				}
+		} else if r.StatusChanged {
+			old, ok := s.rooms[r.ID]
+			if ok {
+				old.Status = r.Status
+				old.State = r.State
 			}
 		}
 

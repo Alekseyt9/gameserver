@@ -108,6 +108,41 @@ func (m *Matcher) CheckAndAdd(q model.RoomQuery) bool {
 func (m *Matcher) doMatching(ctx context.Context) error {
 	s := m.queueToSlice()
 
+	rooms, err := m.processRooms(s)
+	if err != nil {
+		return err
+	}
+
+	msgs := m.getStartGameMessages()
+
+	err = m.store.CreateOrUpdateRooms(ctx, rooms)
+	if err != nil {
+		return err
+	}
+
+	// удаляем заполненные комнаты, сбрасываем состояние игроков.
+	for g, v := range m.rooms {
+		rs := make([]*model.MatcherRoom, 0)
+		for _, r := range v.rooms { // создаем список комнат в ожидании и оставляем только их.
+			if len(r.Players) < v.playersCount {
+				r.IsNew = false
+				r.StatusChanged = false
+				rs = append(rs, r)
+				for _, p := range r.Players { // так как уже в базе - то не новые.
+					p.IsNew = false
+				}
+			}
+		}
+		m.rooms[g].rooms = rs
+	}
+
+	// рассылаем сообщения о старте игры игрокам (всем игрокам комнат, котрые перешли в режим игры)
+	m.sendMessages(msgs)
+
+	return nil
+}
+
+func (m *Matcher) processRooms(s []model.RoomQuery) ([]*model.MatcherRoom, error) {
 	for _, l := range s {
 		rg, ok := m.rooms[l.GameID]
 		if !ok {
@@ -147,7 +182,7 @@ func (m *Matcher) doMatching(ctx context.Context) error {
 			wr.StatusChanged = true
 			err := m.initGame(wr)
 			if err != nil {
-				return err
+				return nil, err
 			}
 		}
 	}
@@ -159,33 +194,7 @@ func (m *Matcher) doMatching(ctx context.Context) error {
 		rooms = append(rooms, v.rooms...)
 	}
 
-	msgs := m.getStartGameMessages()
-
-	err := m.store.CreateOrUpdateRooms(ctx, rooms)
-	if err != nil {
-		return err
-	}
-
-	// удаляем заполненные комнаты, сбрасываем состояние игроков.
-	for g, v := range m.rooms {
-		rs := make([]*model.MatcherRoom, 0)
-		for _, r := range v.rooms { // создаем список комнат в ожидании и оставляем только их.
-			if len(r.Players) < v.playersCount {
-				r.IsNew = false
-				r.StatusChanged = false
-				rs = append(rs, r)
-				for _, p := range r.Players { // так как уже в базе - то не новые.
-					p.IsNew = false
-				}
-			}
-		}
-		m.rooms[g].rooms = rs
-	}
-
-	// рассылаем сообщения о старте игры игрокам (всем игрокам комнат, котрые перешли в режим игры)
-	m.sendMessages(msgs)
-
-	return nil
+	return rooms, nil
 }
 
 // инициализируем игру.

@@ -101,7 +101,10 @@ func (m *RoomManager) DeleteChan(roomID uuid.UUID) {
 
 // подключение к существующей комнате или создание комнаты.
 // подключаться нужно каждый раз при коннекте игрока.
-func (m *RoomManager) PlayerConnect(ctx context.Context, playerID uuid.UUID, gameID string) (*PlayerConnectResult, error) {
+func (m *RoomManager) PlayerConnect(
+	ctx context.Context,
+	playerID uuid.UUID,
+	gameID string) (*PlayerConnectResult, error) {
 	room, err := m.GetExistingRoom(ctx, gameID, playerID)
 	if err != nil {
 		return nil, err
@@ -113,14 +116,14 @@ func (m *RoomManager) PlayerConnect(ctx context.Context, playerID uuid.UUID, gam
 			State:       "game",
 			ContentLink: m.gameManager.GetGameInfo(gameID).ContentURL,
 		}, nil
-	} else {
-		// ставим в очередь в матчмейкинг.
-		m.matcher.CheckAndAdd(model.RoomQuery{
-			PlayerID: playerID,
-			GameID:   gameID,
-		})
-		return &PlayerConnectResult{State: "wait"}, nil
 	}
+
+	// ставим в очередь в матчмейкинг.
+	m.matcher.CheckAndAdd(model.RoomQuery{
+		PlayerID: playerID,
+		GameID:   gameID,
+	})
+	return &PlayerConnectResult{State: "wait"}, nil
 }
 
 // выход из комнаты (выйти можно только один раз).

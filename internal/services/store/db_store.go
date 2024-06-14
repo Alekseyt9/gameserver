@@ -122,13 +122,29 @@ func (s *DBStore) CreateOrUpdateRooms(ctx context.Context, rooms []*model.Matche
 	}
 	defer stmtRoomPlayerInsert.Close()
 
+	err = storeRooms(ctx, rooms, stmtRoomInsert, stmtRoomUpdate, stmtRoomPlayerInsert)
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
+func storeRooms(
+	ctx context.Context,
+	rooms []*model.MatcherRoom,
+	stmtRoomInsert *sql.Stmt,
+	stmtRoomUpdate *sql.Stmt,
+	stmtRoomPlayerInsert *sql.Stmt) error {
 	for _, r := range rooms {
 		if r.IsNew {
+			var err error
 			_, err = stmtRoomInsert.ExecContext(ctx, uuid.New(), r.GameID, r.Status, r.State)
 			if err != nil {
 				return err
 			}
 		} else if r.StatusChanged {
+			var err error
 			_, err = stmtRoomUpdate.ExecContext(ctx, r.Status, r.State)
 			if err != nil {
 				return err
@@ -136,6 +152,7 @@ func (s *DBStore) CreateOrUpdateRooms(ctx context.Context, rooms []*model.Matche
 		}
 
 		for _, p := range r.Players {
+			var err error
 			if p.IsNew {
 				_, err = stmtRoomPlayerInsert.ExecContext(ctx, p.PlayerID, r.ID)
 				if err != nil {
@@ -145,7 +162,7 @@ func (s *DBStore) CreateOrUpdateRooms(ctx context.Context, rooms []*model.Matche
 		}
 	}
 
-	return tx.Commit()
+	return nil
 }
 
 func (s *DBStore) LoadWaitingRooms(ctx context.Context) ([]*model.MatcherRoom, error) {
@@ -191,7 +208,6 @@ func (s *DBStore) LoadWaitingRooms(ctx context.Context) ([]*model.MatcherRoom, e
 				PlayerID: *playerID,
 			})
 		}
-
 	}
 
 	if err = rows.Err(); err != nil {

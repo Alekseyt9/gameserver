@@ -12,7 +12,7 @@ import (
 type TTCProcessor struct {
 }
 
-var directions = [][2]int{
+var directions = [][2]int{ //nolint:gochecknoglobals // это константа.
 	{1, 0},
 	{0, 1},
 	{1, 1},
@@ -28,6 +28,10 @@ const (
 	contentURL    = "/content/games/tictactoe/index.html"
 	playerFigure1 = 1
 	playerFigure2 = 2
+	actionState   = "state"
+	actionMove    = "move"
+	actionQuit    = "quit"
+	stateFinished = "finished"
 )
 
 func New() model.GameProcessor {
@@ -58,17 +62,17 @@ func (p *TTCProcessor) Process(ctx model.ProcessorCtx, st string, msg *model.Gam
 	}
 
 	switch m.Action {
-	case "state":
-		err = state(ctx, s, m, msg.PlayerID)
+	case actionState:
+		err = state(ctx, s, msg.PlayerID)
 		if err != nil {
 			return err
 		}
-	case "move":
+	case actionMove:
 		err = move(ctx, s, m, msg.PlayerID)
 		if err != nil {
 			return err
 		}
-	case "quit":
+	case actionQuit:
 		err = quit(ctx, s, msg.PlayerID)
 		if err != nil {
 			return err
@@ -124,19 +128,19 @@ func move(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage, playerID uuid.UUID
 
 	// проверить конец игры, ничью.
 	var line *[][]int
-	chWin, line := checkWin(s.Field, figureOf(s, s.Players[0]), line)
+	chWin, line := checkWin(s.Field, figureOf(s, s.Players[0]))
 	if chWin {
 		s.Winner = 0
-		s.State = "finished"
+		s.State = stateFinished
 		s.WinLine = *line
 	} else {
-		chWin, line = checkWin(s.Field, figureOf(s, s.Players[1]), line)
+		chWin, line = checkWin(s.Field, figureOf(s, s.Players[1]))
 		if chWin {
 			s.Winner = 1
-			s.State = "finished"
+			s.State = stateFinished
 			s.WinLine = *line
 		} else if checkDraw(s.Field) {
-			s.State = "finished"
+			s.State = stateFinished
 		}
 	}
 
@@ -187,7 +191,7 @@ func indexOf(s *TTTState, playerID uuid.UUID) int {
 
 // игрок покинул комнату.
 func quit(ctx model.ProcessorCtx, s *TTTState, playerID uuid.UUID) error {
-	if len(s.Players) == 2 {
+	if len(s.Players) == playerCount {
 		winner := oppositeOf(s, playerID)
 		s.Winner = indexOf(s, winner)
 		s.State = "finished"
@@ -211,7 +215,7 @@ func quit(ctx model.ProcessorCtx, s *TTTState, playerID uuid.UUID) error {
 func start(players []uuid.UUID) (string, error) {
 	s := &TTTState{
 		State:  "game",
-		Turn:   players[rand.Intn(2)],
+		Turn:   players[rand.Intn(playerCount)], //nolint:gosec //rand
 		Winner: -1,
 	}
 
@@ -230,7 +234,7 @@ func start(players []uuid.UUID) (string, error) {
 	return json, nil
 }
 
-func state(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage, playerID uuid.UUID) error {
+func state(ctx model.ProcessorCtx, s *TTTState, playerID uuid.UUID) error {
 	msg, err := createStateSendMsg(s, playerID)
 	if err != nil {
 		return err
@@ -335,7 +339,7 @@ func checkDraw(board [size][size]byte) bool {
 	return c == size*size
 }
 
-func checkWin(board [size][size]byte, figure byte, line *[][]int) (bool, *[][]int) {
+func checkWin(board [size][size]byte, figure byte) (bool, *[][]int) {
 	for i := range size {
 		for j := range size {
 			if board[i][j] == figure {
