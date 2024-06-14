@@ -174,7 +174,7 @@ func (s *DBStore) LoadWaitingRooms(ctx context.Context) ([]*model.MatcherRoom, e
 		select r.Id, r.GameId, r.Status, rp.PlayerId
 		from Rooms r
 		left join RoomPlayers rp on rp.RoomId = r.Id
-		where r.Status = 'wait'
+		where r.Status = 'wait' and not (rp.IsQuit is not null and rp.IsQuit)
 	`)
 	if err != nil {
 		return nil, err

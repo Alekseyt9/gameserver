@@ -145,7 +145,7 @@ func (s *MemStore) LoadWaitingRooms(_ context.Context) ([]*model.MatcherRoom, er
 		if v.Status == "wait" {
 			ps := make([]*model.MatcherPlayer, 0)
 			for _, p := range s.roomPlayers {
-				if p.RoomID == v.ID {
+				if p.RoomID == v.ID && !p.IsQuit {
 					ps = append(ps, &model.MatcherPlayer{
 						PlayerID: p.PlayerID,
 					})
