@@ -78,6 +78,27 @@
 	<script>
 
 		const gm = window.parent.gm;
+		const ws = gm.wsm.getConnection();
+
+		gm.wsm.subscribe('onmessage', (event) => {
+			//console.log("Received: " + event.data);
+			try {
+				const data = JSON.parse(event.data);
+				console.log("Received:", data);
+			} catch (error) {
+				console.error("Error parsing JSON:", error);
+			}
+		});
+
+		ws.send(`
+		{
+			"type": "game",
+			"gameid": "tictactoe",
+			"data": { 				
+				"action": "state"
+			}
+		}`);
+
 		const title = document.getElementById('title');
 
 		document.getElementById('exit-button').addEventListener('click', function() {
@@ -107,9 +128,8 @@
 			const x = Math.floor(px/size) * size + size/2;
 			const y = Math.floor(py/size) * size + size/2;
 
-
 			move = !move;
-			//textElement.setAttribute('fill', move ? "#0F2D70" : "#B33B1D");
+			
 			if (move) {
 				drawCross(x, y, size);
 			} else {

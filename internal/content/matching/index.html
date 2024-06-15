@@ -37,7 +37,24 @@
             })
             .catch(error => {
                 console.error('An error occurred:', error);
-            });
+            }
+        );
+
+		const ws = gm.wsm.getConnection();
+
+		gm.wsm.subscribe('onmessage', (event) => {
+			//console.log("Received: " + event.data);
+			try {
+				const data = JSON.parse(event.data);
+                if (data.type == "room" && data.data.action == "start"){
+                    gm.SetContent(data.data.contentLink)
+                }
+				console.log("Received:", data);
+			} catch (error) {
+				console.error("Error parsing JSON:", error);
+			}
+		});
+
     </script>
 
 </body>

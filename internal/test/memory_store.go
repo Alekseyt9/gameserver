@@ -5,6 +5,7 @@ import (
 	"gameserver/internal/services/model"
 	"gameserver/internal/services/store"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -18,10 +19,11 @@ type MemStore struct {
 }
 
 type MSRoom struct {
-	ID     uuid.UUID
-	GameID string
-	State  string
-	Status string
+	ID        uuid.UUID
+	GameID    string
+	State     string
+	Status    string
+	TimeStamp time.Time
 }
 
 type MSPlayer struct {
@@ -71,14 +73,27 @@ func (s *MemStore) CreatePlayer(_ context.Context, p *model.Player) error {
 func (s *MemStore) GetRoom(_ context.Context, gameID string, playerID uuid.UUID, allowPlayerQuit bool) (*model.Room, error) {
 	var res *model.Room
 	var isQuit bool
+	var maxTime time.Time
 
 	s.lock.RLock()
 	defer s.lock.RUnlock()
 
+	for _, p := range s.roomPlayers {
+		if p.PlayerID == playerID {
+			r := s.rooms[p.RoomID]
+			if r.GameID == gameID {
+				if maxTime.Before(r.TimeStamp) {
+					maxTime = r.TimeStamp
+				}
+			}
+		}
+	}
+
 exit:
 	for _, p := range s.roomPlayers {
-		if p.PlayerID == playerID && !p.IsQuit {
-			if s.rooms[p.RoomID].GameID == gameID {
+		if p.PlayerID == playerID {
+			r := s.rooms[p.RoomID]
+			if r.GameID == gameID && r.TimeStamp == maxTime {
 				r := s.rooms[p.RoomID]
 				res = &model.Room{
 					ID:     r.ID,
@@ -105,6 +120,7 @@ func (s *MemStore) SetRoomState(_ context.Context, id uuid.UUID, state string) e
 	r, ok := s.rooms[id]
 	if ok {
 		r.State = state
+		r.TimeStamp = time.Now()
 	}
 	return nil
 }
@@ -116,16 +132,18 @@ func (s *MemStore) CreateOrUpdateRooms(_ context.Context, rooms []*model.Matcher
 	for _, r := range rooms {
 		if r.IsNew {
 			s.rooms[r.ID] = &MSRoom{
-				ID:     r.ID,
-				GameID: r.GameID,
-				State:  r.State,
-				Status: r.Status,
+				ID:        r.ID,
+				GameID:    r.GameID,
+				State:     r.State,
+				Status:    r.Status,
+				TimeStamp: time.Now(),
 			}
 		} else if r.StatusChanged {
 			old, ok := s.rooms[r.ID]
 			if ok {
 				old.Status = r.Status
 				old.State = r.State
+				old.TimeStamp = time.Now()
 			}
 		}
 
