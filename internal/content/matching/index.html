@@ -47,7 +47,7 @@
 			try {
 				const data = JSON.parse(event.data);
                 if (data.type == "room" && data.data.action == "start"){
-                    gm.SetContent(data.data.contentLink)
+                    gm.SetContent(data.data.data.contentLink)
                 }
 				console.log("Received:", data);
 			} catch (error) {

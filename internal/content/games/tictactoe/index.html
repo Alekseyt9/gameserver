@@ -79,12 +79,28 @@
 
 		const gm = window.parent.gm;
 		const ws = gm.wsm.getConnection();
+		let turnState = 0; // 0 - not in the game, 1 - me, 2 - opponent
+		let fig = 0;
+		let field;
 
 		gm.wsm.subscribe('onmessage', (event) => {
-			//console.log("Received: " + event.data);
 			try {
-				const data = JSON.parse(event.data);
-				console.log("Received:", data);
+				const msg = JSON.parse(event.data);
+				console.log("Received:", msg);
+				if (msg.type == "game" && msg.data.action == "state"){					
+					const s = msg.data.data;
+					field = s.field;
+					if (s.state == "game"){									
+						if (s.turn == s.you){
+							title.innerText = 'Ваш ход';
+							turnState = 1;
+							fig = s.players[0] == s.you ? "x" : "o";
+						} else {
+							title.innerText = 'Ожидание хода другого игрока';
+							turnState = 2;
+						}
+					}					
+				}
 			} catch (error) {
 				console.error("Error parsing JSON:", error);
 			}
@@ -121,76 +137,107 @@
 		let move = false;
 
 		svgElement.addEventListener('click', (e) => {
-			const rect = svgElement.getBoundingClientRect();
-			const px = e.clientX - rect.left;
-			const py = e.clientY - rect.top;
+			if (turnState == 1){
+				const rect = svgElement.getBoundingClientRect();
+				const px = e.clientX - rect.left;
+				const py = e.clientY - rect.top;
 
-			const x = Math.floor(px/size) * size + size/2;
-			const y = Math.floor(py/size) * size + size/2;
+				const x = Math.floor(px/size);
+				const y = Math.floor(py/size);
 
-			move = !move;
-			
-			if (move) {
-				drawCross(x, y, size);
-			} else {
-				drawCircle(x, y, size);
+				if (x >= 0 && x < 15 && y >= 0 && y <= 15){
+					if (field[x][y] == 0){
+						let move = [x, y];
+						ws.send(`
+							{
+								"type": "game",
+								"gameid": "tictactoe",
+								"data": { 				
+									"action": "move",
+									"data": {
+										"move": [${move.join(', ')}]
+									}
+								}
+							}`);
+					}
+				}
 			}
-
-			svgElement.appendChild(textElement);
 		});
 
 		drawBoard(count, size);
 
+		function redrawFigs(){
+			clearFigs();
+			for (var i=0; i<15; i++){
+				for (var j=0; j<15; j++){
+					if (field[i][j] != 0){
+						const x = Math.floor(i/size) * size + size/2;
+						const y = Math.floor(j/size) * size + size/2;
+						if (field[i][j] == 1){
+							drawCross(x, y, size);
+						}else {
+							drawCircle(x, y, size);
+						}
+					}
+				}
+			}
+		}
+
+		function clearFigs(){
+			const figures = document.querySelectorAll('.game-figure');
+			figures.forEach(figure => figure.remove());
+		}
 
 		function drawCross(x, y, size) {
-		const halfSize = size / 3.5; 
-
-		drawLine(x - halfSize, y - halfSize, x + halfSize, y + halfSize, "#B33B1D", '6');
-		drawLine(x + halfSize, y - halfSize, x - halfSize, y + halfSize, "#B33B1D", '6');
+			const halfSize = size / 3.5; 
+			const line1 = drawLine(x - halfSize, y - halfSize, x + halfSize, y + halfSize, "#B33B1D", '6');
+			const line2 = drawLine(x + halfSize, y - halfSize, x - halfSize, y + halfSize, "#B33B1D", '6');
+			line1.classList.add('game-figure');
+			line2.classList.add('game-figure');
 		}
 
 		function drawCircle(x, y, size) {
-		const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-		circle.setAttribute('cx', x);
-		circle.setAttribute('cy', y);
-		circle.setAttribute('r', size / 3.5); 
-		circle.setAttribute('stroke', "#0F2D70");
-		circle.setAttribute('stroke-width', '6');
-		circle.setAttribute('fill', 'none');
-
-		svgElement.appendChild(circle);
+			const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+			circle.setAttribute('cx', x);
+			circle.setAttribute('cy', y);
+			circle.setAttribute('r', size / 3.5); 
+			circle.setAttribute('stroke', "#0F2D70");
+			circle.setAttribute('stroke-width', '6');
+			circle.setAttribute('fill', 'none');
+			svgElement.appendChild(circle);
+			circle.classList.add('game-figure');
+			return circle;
 		}
 
 		function drawLine(x1, y1, x2, y2, color, sw = '1') {
-		const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-		line.setAttribute('x1', x1);
-		line.setAttribute('y1', y1);
-		line.setAttribute('x2', x2);
-		line.setAttribute('y2', y2);
-		line.setAttribute('stroke', color);
-		line.setAttribute('stroke-width', sw);
-
-		svgElement.appendChild(line);
+			const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+			line.setAttribute('x1', x1);
+			line.setAttribute('y1', y1);
+			line.setAttribute('x2', x2);
+			line.setAttribute('y2', y2);
+			line.setAttribute('stroke', color);
+			line.setAttribute('stroke-width', sw);
+			svgElement.appendChild(line);
+			return line;
 		}
 
 		function drawBoard(count, size){
-		for (let i = 0; i < count+1; i++) {
-			for (let j = 0; j < count+1; j++) {
-				drawLine(i*size, 0, i*size, count*size, '#696969');
-				drawLine(0, j*size, count*size, j*size, '#696969');
+			for (let i = 0; i < count+1; i++) {
+				for (let j = 0; j < count+1; j++) {
+					drawLine(i*size, 0, i*size, count*size, '#696969');
+					drawLine(0, j*size, count*size, j*size, '#696969');
+				}
 			}
-		}
 		}
 
 		function resizeBoard() {
-		const container = document.getElementById('canvas-container');
-		const board = document.getElementById('board');
-		const containerWidth = container.clientWidth;
-		const containerHeight = container.clientHeight;
-		const size = Math.min(containerWidth, containerHeight);
-
-		board.setAttribute('width', size);
-		board.setAttribute('height', size);
+			const container = document.getElementById('canvas-container');
+			const board = document.getElementById('board');
+			const containerWidth = container.clientWidth;
+			const containerHeight = container.clientHeight;
+			const size = Math.min(containerWidth, containerHeight);
+			board.setAttribute('width', size);
+			board.setAttribute('height', size);
 		}
 
 	</script>

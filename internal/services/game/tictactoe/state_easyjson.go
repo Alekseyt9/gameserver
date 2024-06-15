@@ -4,7 +4,6 @@ package game
 
 import (
 	json "encoding/json"
-
 	uuid "github.com/google/uuid"
 	easyjson "github.com/mailru/easyjson"
 	jlexer "github.com/mailru/easyjson/jlexer"
@@ -49,7 +48,18 @@ func easyjsonBd887cf1DecodeGameserverInternalServicesGameTictactoe(in *jlexer.Le
 						if in.IsNull() {
 							in.Skip()
 						} else {
-							copy((out.Field)[v1][:], in.Bytes())
+							in.Delim('[')
+							v2 := 0
+							for !in.IsDelim(']') {
+								if v2 < 15 {
+									((out.Field)[v1])[v2] = int(in.Int())
+									v2++
+								} else {
+									in.SkipRecursive()
+								}
+								in.WantComma()
+							}
+							in.Delim(']')
 						}
 						v1++
 					} else {
@@ -175,7 +185,14 @@ func easyjsonBd887cf1EncodeGameserverInternalServicesGameTictactoe(out *jwriter.
 			if v7 > 0 {
 				out.RawByte(',')
 			}
-			out.Base64Bytes((in.Field)[v7][:])
+			out.RawByte('[')
+			for v8 := range (in.Field)[v7] {
+				if v8 > 0 {
+					out.RawByte(',')
+				}
+				out.Int(int(((in.Field)[v7])[v8]))
+			}
+			out.RawByte(']')
 		}
 		out.RawByte(']')
 	}
@@ -305,7 +322,18 @@ func easyjsonBd887cf1DecodeGameserverInternalServicesGameTictactoe1(in *jlexer.L
 						if in.IsNull() {
 							in.Skip()
 						} else {
-							copy((out.Field)[v16][:], in.Bytes())
+							in.Delim('[')
+							v17 := 0
+							for !in.IsDelim(']') {
+								if v17 < 15 {
+									((out.Field)[v16])[v17] = int(in.Int())
+									v17++
+								} else {
+									in.SkipRecursive()
+								}
+								in.WantComma()
+							}
+							in.Delim(']')
 						}
 						v16++
 					} else {
@@ -435,7 +463,14 @@ func easyjsonBd887cf1EncodeGameserverInternalServicesGameTictactoe1(out *jwriter
 			if v22 > 0 {
 				out.RawByte(',')
 			}
-			out.Base64Bytes((in.Field)[v22][:])
+			out.RawByte('[')
+			for v23 := range (in.Field)[v22] {
+				if v23 > 0 {
+					out.RawByte(',')
+				}
+				out.Int(int(((in.Field)[v22])[v23]))
+			}
+			out.RawByte(']')
 		}
 		out.RawByte(']')
 	}

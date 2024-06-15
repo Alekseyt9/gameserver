@@ -164,7 +164,7 @@ func move(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage, playerID uuid.UUID
 }
 
 // фигура игрока.
-func figureOf(s *TTTState, playerID uuid.UUID) byte {
+func figureOf(s *TTTState, playerID uuid.UUID) int {
 	// у первого - крестик.
 	if s.Players[0] == playerID {
 		return playerFigure1
@@ -328,7 +328,7 @@ func createStateSendMsg(s *TTTState, playerID uuid.UUID) (*model.SendMessage, er
 }
 
 // проверить ничью (все поля заняты).
-func checkDraw(board [size][size]byte) bool {
+func checkDraw(board [size][size]int) bool {
 	c := 0
 	for i := range size {
 		for j := range size {
@@ -340,7 +340,7 @@ func checkDraw(board [size][size]byte) bool {
 	return c == size*size
 }
 
-func checkWin(board [size][size]byte, figure byte) (bool, *[][]int) {
+func checkWin(board [size][size]int, figure int) (bool, *[][]int) {
 	for i := range size {
 		for j := range size {
 			if board[i][j] == figure {
@@ -356,7 +356,7 @@ func checkWin(board [size][size]byte, figure byte) (bool, *[][]int) {
 	return false, nil
 }
 
-func checkDirection(board [size][size]byte, player byte, x, y, dx, dy int) bool {
+func checkDirection(board [size][size]int, player, x, y, dx, dy int) bool {
 	count := 0
 	for k := range winCount {
 		nx, ny := x+dx*k, y+dy*k

@@ -65,6 +65,8 @@ func NewWSManager(router *gin.Engine, pm *PlayerManager, rm *RoomManager, log *s
 			m.log.Error("Ошибка получения playerID из куки", err)
 		}
 
+		m.log.Info("Message recieved", "msg", string(data))
+
 		msg, err := createGameMsg(data, *playerID)
 		if err != nil {
 			m.log.Error("Ошибка создания GameMsg", err)
