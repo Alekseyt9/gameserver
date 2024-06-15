@@ -90,16 +90,65 @@
 				if (msg.type == "game" && msg.data.action == "state"){					
 					const s = msg.data.data;
 					field = s.field;
-					if (s.state == "game"){									
+					redrawFigs();	
+					if (s.state == "game"){												
 						if (s.turn == s.you){
 							title.innerText = 'Ваш ход';
 							turnState = 1;
-							fig = s.players[0] == s.you ? "x" : "o";
 						} else {
 							title.innerText = 'Ожидание хода другого игрока';
 							turnState = 2;
 						}
-					}					
+					}	
+					if (s.state == "finished") {
+						if (s.winner != 0){
+							if (s.players[0] == s.you && s.winner == 1){
+								title.innerText = 'Вы победили';
+							}else{
+								title.innerText = 'Вы проиграли';
+							}
+							if (s.winline){
+								let x1 = s.winline[0][0] * size;
+								let y1 = s.winline[0][1] * size;
+								let x2 = s.winline[1][0] * size;
+								let y2 = s.winline[1][1] * size;
+								let col = s.winner == 1 ? "#B33B1D" : "#0F2D70";
+
+								// Если линия горизонтальная
+								if (y1 == y2) {
+									y1 += size / 2;
+									y2 += size / 2;
+									x1 = s.winline[0][0] * size;
+									x2 = s.winline[1][0] * size;
+								}
+
+								// Если линия вертикальная
+								else if (x1 == x2) {
+									x1 += size / 2;
+									x2 += size / 2;
+									y1 = s.winline[0][1] * size;
+									y2 = s.winline[1][1] * size;
+								}
+
+								// Если линия диагональная
+								/*else {
+									if (x2 > x1) {
+										x1 -= size / 2;
+										y1 -= size / 2;
+										x2 += size / 2;
+										y2 += size / 2;
+									} else {
+										x1 += size / 2;
+										y1 += size / 2;
+										x2 -= size / 2;
+										y2 -= size / 2;
+									}
+								}*/
+
+								drawLine(x1, y1, x2, y2, col, '6');
+							}
+						}
+					}				
 				}
 			} catch (error) {
 				console.error("Error parsing JSON:", error);
@@ -171,8 +220,8 @@
 			for (var i=0; i<15; i++){
 				for (var j=0; j<15; j++){
 					if (field[i][j] != 0){
-						const x = Math.floor(i/size) * size + size/2;
-						const y = Math.floor(j/size) * size + size/2;
+						const x = i * size + size/2;
+						const y = j * size + size/2;
 						if (field[i][j] == 1){
 							drawCross(x, y, size);
 						}else {

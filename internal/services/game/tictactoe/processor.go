@@ -131,13 +131,13 @@ func move(ctx model.ProcessorCtx, s *TTTState, m *TTTMessage, playerID uuid.UUID
 	var line *[][]int
 	chWin, line := checkWin(s.Field, figureOf(s, s.Players[0]))
 	if chWin {
-		s.Winner = 0
+		s.Winner = 1
 		s.State = stateFinished
 		s.WinLine = *line
 	} else {
 		chWin, line = checkWin(s.Field, figureOf(s, s.Players[1]))
 		if chWin {
-			s.Winner = 1
+			s.Winner = 2
 			s.State = stateFinished
 			s.WinLine = *line
 		} else if checkDraw(s.Field) {
@@ -192,9 +192,13 @@ func indexOf(s *TTTState, playerID uuid.UUID) int {
 
 // игрок покинул комнату.
 func quit(ctx model.ProcessorCtx, s *TTTState, playerID uuid.UUID) error {
+	if s.State == "finished" {
+		return nil
+	}
+
 	if len(s.Players) == playerCount {
 		winner := oppositeOf(s, playerID)
-		s.Winner = indexOf(s, winner)
+		s.Winner = indexOf(s, winner) + 1
 		s.State = "finished"
 
 		m, err := createStateSendMsg(s, winner)
@@ -217,7 +221,7 @@ func start(players []uuid.UUID) (string, error) {
 	s := &TTTState{
 		State:  "game",
 		Turn:   players[rand.Intn(playerCount)], //nolint:gosec //rand
-		Winner: -1,
+		Winner: 0,
 	}
 
 	// крестик ходит первый.
