@@ -159,7 +159,7 @@ func (m *RoomManager) createQuitGameMsg(gameID string, playerID uuid.UUID) model
 }
 
 func (m *RoomManager) GetExistingRoom(ctx context.Context, gameID string, playerID uuid.UUID) (*model.Room, error) {
-	r, err := m.store.GetRoom(ctx, gameID, playerID)
+	r, err := m.store.GetRoom(ctx, gameID, playerID, false)
 	if err != nil {
 		return nil, err
 	}

@@ -76,6 +76,16 @@
 	</div>
 	
 	<script>
+
+		const gm = window.parent.gm;
+		const title = document.getElementById('title');
+
+		document.getElementById('exit-button').addEventListener('click', function() {
+            gm.Quit("tictactoe").then((x) => { 
+				title.innerText = 'Вы вышли из игры';
+			});
+        });
+
 		resizeBoard();
 
 		const svgElement = document.getElementById('board');

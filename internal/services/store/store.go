@@ -14,7 +14,7 @@ type Store interface {
 	CreatePlayer(ctx context.Context, player *model.Player) error
 	GetPlayer(ctx context.Context, playerID uuid.UUID) (*model.Player, error)
 
-	GetRoom(ctx context.Context, gameID string, playerID uuid.UUID) (*model.Room, error)
+	GetRoom(ctx context.Context, gameID string, playerID uuid.UUID, allowPlayerQuit bool) (*model.Room, error)
 	SetRoomState(ctx context.Context, id uuid.UUID, state string) error
 
 	// помечаем игрока комнаты на удаление

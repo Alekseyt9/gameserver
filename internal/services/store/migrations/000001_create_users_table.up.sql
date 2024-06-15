@@ -8,7 +8,8 @@ CREATE TABLE Rooms (
     Id 		        UUID PRIMARY KEY,
     GameId		    TEXT NOT NULL,
     State 		    TEXT NOT NULL,
-    Status          TEXT NOT NULL
+    Status          TEXT NOT NULL,
+    TimeStamp       TIMESTAMP NOT NULL -- время последнего изменения
 );
 CREATE INDEX i_rooms_game_id ON Rooms (GameId);
 

@@ -60,16 +60,24 @@ func (s *DBStore) GetPlayer(ctx context.Context, playerID uuid.UUID) (*model.Pla
 	}, nil
 }
 
-func (s *DBStore) GetRoom(ctx context.Context, gameID string, playerID uuid.UUID) (*model.Room, error) {
+func (s *DBStore) GetRoom(ctx context.Context, gameID string, playerID uuid.UUID, allowPlayerQuit bool) (*model.Room, error) {
 	row := s.conn.QueryRowContext(ctx, `
-		SELECT r.Id, r.State, r.Status
-		FROM Rooms r 
-		join RoomPlayers rp on rp.RoomID = r.Id 
-		WHERE r.GameId = $1 and rp.PlayerId = $2 and not rp.IsQuit
-		`, gameID, playerID)
+	SELECT r.Id, r.State, r.Status, rp.IsQuit
+	FROM Rooms r
+	JOIN RoomPlayers rp ON rp.RoomID = r.Id
+	WHERE r.GameId = $1 
+	AND rp.PlayerId = $2
+	AND r.TimeStamp = (
+		SELECT MAX(r2.TimeStamp)
+		FROM Rooms r2
+		JOIN RoomPlayers rp2 ON rp2.RoomID = r2.Id
+		WHERE r2.GameId = $1
+		AND rp2.PlayerId = $2
+	); `, gameID, playerID)
 
+	var isQuit bool
 	res := &model.Room{}
-	err := row.Scan(&res.ID, &res.State, &res.Status)
+	err := row.Scan(&res.ID, &res.State, &res.Status, &isQuit)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -78,15 +86,19 @@ func (s *DBStore) GetRoom(ctx context.Context, gameID string, playerID uuid.UUID
 		return nil, err
 	}
 
+	if !allowPlayerQuit && isQuit {
+		return nil, ErrNotFound
+	}
+
 	return res, nil
 }
 
 func (s *DBStore) SetRoomState(ctx context.Context, roomID uuid.UUID, state string) error {
 	_, err := s.conn.ExecContext(ctx, `
 		update Rooms
-		set State = $1
+		set State = $1, TimeStamp = CURRENT_TIMESTAMP
 		where Id = $2
-	`, roomID, state)
+	`, state, roomID)
 	return err
 }
 
@@ -98,8 +110,8 @@ func (s *DBStore) CreateOrUpdateRooms(ctx context.Context, rooms []*model.Matche
 	defer tx.Rollback() //nolint:errcheck //defer
 
 	stmtRoomInsert, err := tx.PrepareContext(ctx, `
-		insert into Rooms(Id, GameId, Status, State)
-		values ($1, $2, $3, $4)
+		insert into Rooms(Id, GameId, Status, State, TimeStamp)
+		values ($1, $2, $3, $4, CURRENT_TIMESTAMP)
 	`)
 	if err != nil {
 		return err
@@ -108,7 +120,7 @@ func (s *DBStore) CreateOrUpdateRooms(ctx context.Context, rooms []*model.Matche
 
 	stmtRoomUpdate, err := tx.PrepareContext(ctx, `
 		update Rooms
-		set Status = $2, State = $3
+		set Status = $2, State = $3, TimeStamp = CURRENT_TIMESTAMP
 		where Id = $1
 	`)
 	if err != nil {
@@ -180,7 +192,7 @@ func (s *DBStore) LoadWaitingRooms(ctx context.Context) ([]*model.MatcherRoom, e
 		select r.Id, r.GameId, r.Status, rp.PlayerId
 		from Rooms r
 		left join RoomPlayers rp on rp.RoomId = r.Id
-		where r.Status = 'wait' and not (rp.IsQuit is not null and rp.IsQuit)
+		where r.Status = 'wait' and not rp.IsQuit
 	`)
 	if err != nil {
 		return nil, err

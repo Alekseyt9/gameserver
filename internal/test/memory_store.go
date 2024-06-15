@@ -68,8 +68,10 @@ func (s *MemStore) CreatePlayer(_ context.Context, p *model.Player) error {
 	return nil
 }
 
-func (s *MemStore) GetRoom(_ context.Context, gameID string, playerID uuid.UUID) (*model.Room, error) {
+func (s *MemStore) GetRoom(_ context.Context, gameID string, playerID uuid.UUID, allowPlayerQuit bool) (*model.Room, error) {
 	var res *model.Room
+	var isQuit bool
+
 	s.lock.RLock()
 	defer s.lock.RUnlock()
 
@@ -83,9 +85,14 @@ exit:
 					State:  r.State,
 					Status: r.Status,
 				}
+				isQuit = p.IsQuit
 				break exit
 			}
 		}
+	}
+
+	if !allowPlayerQuit && isQuit {
+		return nil, store.ErrNotFound
 	}
 
 	return res, nil
