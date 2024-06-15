@@ -131,19 +131,19 @@
 								}
 
 								// Если линия диагональная
-								/*else {
-									if (x2 > x1) {
-										x1 -= size / 2;
-										y1 -= size / 2;
-										x2 += size / 2;
-										y2 += size / 2;
+								else {
+									if (y2 > y1) {										
+										//x1 -= size;
+										//y1 += size;
+										//x2 -= size ;
+										//y2 += size;								
 									} else {
-										x1 += size / 2;
-										y1 += size / 2;
-										x2 -= size / 2;
-										y2 -= size / 2;
+										//x1 += size / 2;
+										y1 += size;
+										//x2 += size / 2;
+										y2 += size;
 									}
-								}*/
+								}
 
 								drawLine(x1, y1, x2, y2, col, '6');
 							}
