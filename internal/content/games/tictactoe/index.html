@@ -102,7 +102,8 @@
 					}	
 					if (s.state == "finished") {
 						if (s.winner != 0){
-							if (s.players[0] == s.you && s.winner == 1){
+							if (s.players[0] == s.you && s.winner == 1 ||
+								s.players[1] == s.you && s.winner == 2){
 								title.innerText = 'Вы победили';
 							}else{
 								title.innerText = 'Вы проиграли';
@@ -132,15 +133,9 @@
 
 								// Если линия диагональная
 								else {
-									if (y2 > y1) {										
-										//x1 -= size;
-										//y1 += size;
-										//x2 -= size ;
-										//y2 += size;								
+									if (y2 > y1) {																
 									} else {
-										//x1 += size / 2;
 										y1 += size;
-										//x2 += size / 2;
 										y2 += size;
 									}
 								}

@@ -120,6 +120,7 @@ func (m *Matcher) doMatching(ctx context.Context) error {
 
 	msgs := m.getStartGameMessages()
 
+	// сохраняем все изменения в базу.
 	err = m.store.CreateOrUpdateRooms(ctx, rooms)
 	if err != nil {
 		return err
@@ -192,7 +193,6 @@ func (m *Matcher) processRooms(s []model.RoomQuery) ([]*model.MatcherRoom, error
 		}
 	}
 
-	// сохраняем все изменения в базу.
 	rooms := make([]*model.MatcherRoom, 0)
 
 	for _, v := range m.rooms {

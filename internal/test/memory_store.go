@@ -70,7 +70,11 @@ func (s *MemStore) CreatePlayer(_ context.Context, p *model.Player) error {
 	return nil
 }
 
-func (s *MemStore) GetRoom(_ context.Context, gameID string, playerID uuid.UUID, allowPlayerQuit bool) (*model.Room, error) {
+func (s *MemStore) GetRoom(
+	_ context.Context,
+	gameID string,
+	playerID uuid.UUID,
+	allowPlayerQuit bool) (*model.Room, error) {
 	var res *model.Room
 	var isQuit bool
 	var maxTime time.Time
@@ -94,7 +98,6 @@ exit:
 		if p.PlayerID == playerID {
 			r := s.rooms[p.RoomID]
 			if r.GameID == gameID && r.TimeStamp == maxTime {
-				r := s.rooms[p.RoomID]
 				res = &model.Room{
 					ID:     r.ID,
 					State:  r.State,

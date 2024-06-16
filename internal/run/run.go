@@ -51,7 +51,12 @@ func Run(cfg *Config) error {
 	return nil
 }
 
-func Router(s store.Store, pm *services.PlayerManager, rm *services.RoomManager, cfg *Config, log *slog.Logger) *gin.Engine {
+func Router(
+	s store.Store,
+	pm *services.PlayerManager,
+	rm *services.RoomManager,
+	cfg *Config,
+	log *slog.Logger) *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 	services.NewWSManager(r, pm, rm, log)
@@ -81,7 +86,6 @@ func setupFileServer(r *gin.Engine, cfg *Config) {
 		tmplPath := filepath.Join(contentDir, "index.html")
 		tmpl := template.Must(template.ParseFiles(tmplPath))
 
-		//wsURL := "ws://" + cfg.Address + "/ws"
 		wsURL := cfg.Address
 		data := PageData{
 			WebSocketURL: wsURL,

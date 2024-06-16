@@ -60,7 +60,11 @@ func (s *DBStore) GetPlayer(ctx context.Context, playerID uuid.UUID) (*model.Pla
 	}, nil
 }
 
-func (s *DBStore) GetRoom(ctx context.Context, gameID string, playerID uuid.UUID, allowPlayerQuit bool) (*model.Room, error) {
+func (s *DBStore) GetRoom(
+	ctx context.Context,
+	gameID string,
+	playerID uuid.UUID,
+	allowPlayerQuit bool) (*model.Room, error) {
 	row := s.conn.QueryRowContext(ctx, `
 	SELECT r.Id, r.State, r.Status, rp.IsQuit
 	FROM Rooms r
