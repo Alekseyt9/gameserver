@@ -30,7 +30,7 @@ func (suite *TestSuite) TestIntegration() {
 	// процесс игры для 2го игрока.
 	gameProcess(suite, ws2, playerID2, cookies2)
 
-	time.Sleep(time.Second * 60)
+	time.Sleep(time.Second * 10)
 }
 
 // процесс игры.
