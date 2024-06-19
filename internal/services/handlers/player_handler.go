@@ -11,6 +11,7 @@ import (
 
 const (
 	playerRandCharCount = 5
+	maxInt32            = int(^uint32(0) >> 1) // ставлю максимальное время жизни для куки.
 )
 
 func (h *Handler) RegisterPlayer(c *gin.Context) {
@@ -45,8 +46,7 @@ func (h *Handler) RegisterPlayer(c *gin.Context) {
 		Name: "player" + h.generateRandomString(playerRandCharCount),
 	}
 
-	maxAge := 2147483647
-	c.SetCookie("playerID", player.ID.String(), maxAge,
+	c.SetCookie("playerID", player.ID.String(), maxInt32,
 		"/", "", false, true)
 
 	err = h.store.CreatePlayer(c.Request.Context(), &player)

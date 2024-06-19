@@ -27,7 +27,16 @@ type InMsg struct {
 
 type SendMessage struct {
 	PlayerID uuid.UUID
+	RoomID   *uuid.UUID
 	Message  string
+}
+
+func NewSendMessage(playerID uuid.UUID, roomID *uuid.UUID, msg string) SendMessage {
+	return SendMessage{
+		PlayerID: playerID,
+		RoomID:   roomID,
+		Message:  msg,
+	}
 }
 
 type GameProcessor interface {

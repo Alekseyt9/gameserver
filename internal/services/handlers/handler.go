@@ -7,15 +7,19 @@ import (
 )
 
 type Handler struct {
-	store       store.Store
-	roomManager *services.RoomManager
-	log         *slog.Logger
+	store         store.Store
+	roomManager   *services.RoomManager
+	log           *slog.Logger
+	wsManager     *services.WebSocketManager
+	playerManager *services.PlayerManager
 }
 
-func New(store store.Store, rm *services.RoomManager, log *slog.Logger) *Handler {
+func New(store store.Store, rm *services.RoomManager, pm *services.PlayerManager, ws *services.WebSocketManager, log *slog.Logger) *Handler {
 	return &Handler{
-		store:       store,
-		roomManager: rm,
-		log:         log,
+		store:         store,
+		roomManager:   rm,
+		log:           log,
+		wsManager:     ws,
+		playerManager: pm,
 	}
 }

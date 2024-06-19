@@ -15,14 +15,21 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	InitialState = iota
+	RecieveGameDataState
+	MakeMoveState
+	QuitRoomState
+)
+
 func (suite *TestSuite) TestIntegration() {
 	cookies1, playerID1 := playerRegister(suite)
-	ws1 := createWSDial(suite, cookies1)
-	connectToRoom(suite, cookies1)
+	//ws1 := createWSDial(suite, cookies1)
+	ws1 := connectToRoom(suite, cookies1)
 
 	cookies2, playerID2 := playerRegister(suite)
-	ws2 := createWSDial(suite, cookies2)
-	connectToRoom(suite, cookies2)
+	//ws2 := createWSDial(suite, cookies2)
+	ws2 := connectToRoom(suite, cookies2)
 
 	// процесс игры для 1го игрока.
 	gameProcess(suite, ws1, playerID1, cookies1)
@@ -38,7 +45,7 @@ func gameProcess(suite *TestSuite, ws *websocket.Conn, playerID *uuid.UUID, cook
 	t := suite.T()
 
 	go func() {
-		state := 0
+		state := InitialState
 
 		for {
 			require.NotNil(t, playerID)
@@ -50,7 +57,7 @@ func gameProcess(suite *TestSuite, ws *websocket.Conn, playerID *uuid.UUID, cook
 			require.NoError(t, err)
 
 			switch state {
-			case 0:
+			case InitialState:
 				if m.Data.Action == "start" {
 					err = ws.WriteMessage(websocket.TextMessage, []byte(`
 						{
@@ -62,11 +69,11 @@ func gameProcess(suite *TestSuite, ws *websocket.Conn, playerID *uuid.UUID, cook
 						}					
 					`))
 					require.NoError(t, err)
-					state = 1
+					state = RecieveGameDataState
 					continue
 				}
 
-			case 1:
+			case RecieveGameDataState:
 				var s game.TTTSendState
 				var data []byte
 				data, err = json.Marshal(m.Data.Data)
@@ -86,11 +93,11 @@ func gameProcess(suite *TestSuite, ws *websocket.Conn, playerID *uuid.UUID, cook
 							}
 						}`))
 					require.NoError(t, err)
-					state = 2
+					state = MakeMoveState
 					continue
 				}
 
-			case 2:
+			case MakeMoveState:
 				var st game.TTTSendState
 				var data []byte
 				data, err = json.Marshal(m.Data.Data)
@@ -98,7 +105,7 @@ func gameProcess(suite *TestSuite, ws *websocket.Conn, playerID *uuid.UUID, cook
 				err = st.UnmarshalJSON(data)
 				require.NoError(t, err)
 				quitRoom(suite, cookies)
-				state = 3
+				state = QuitRoomState
 				err = ws.Close()
 				require.NoError(t, err)
 				continue
@@ -128,24 +135,28 @@ func quitRoom(suite *TestSuite, cookies []*http.Cookie) {
 }
 
 // подключение игрока к комнате.
-func connectToRoom(suite *TestSuite, cookies []*http.Cookie) {
-	ts := suite.ts
-	t := suite.T()
+func connectToRoom(suite *TestSuite, cookies []*http.Cookie) *websocket.Conn {
+	//ts := suite.ts
+	//t := suite.T()
 
-	jsonValue := []byte(`{"gameID":"tictactoe"}`)
-	req, err := http.NewRequest(http.MethodPost, ts.URL+"/api/room/connect", bytes.NewBuffer(jsonValue))
-	req.Header.Set("Content-Type", "application/json")
-	require.NoError(t, err)
-	for _, cookie := range cookies {
-		req.AddCookie(cookie)
-	}
-	resp, err := ts.Client().Do(req)
-	require.NoError(t, err)
-	defer resp.Body.Close()
-	bodyBytes, err := io.ReadAll(resp.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-	require.NotEqual(t, "", bodyString)
+	/*
+		jsonValue := []byte(`{"gameID":"tictactoe"}`)
+		req, err := http.NewRequest(http.MethodPost, ts.URL+"/api/room/connect", bytes.NewBuffer(jsonValue))
+		req.Header.Set("Content-Type", "application/json")
+		require.NoError(t, err)
+		for _, cookie := range cookies {
+			req.AddCookie(cookie)
+		}
+		resp, err := ts.Client().Do(req)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+		bodyBytes, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+		bodyString := string(bodyBytes)
+		require.NotEqual(t, "", bodyString)
+	*/
+
+	return createWSDial(suite, cookies)
 }
 
 // создание websocket соединения.
@@ -157,7 +168,7 @@ func createWSDial(s *TestSuite, cookies []*http.Cookie) *websocket.Conn {
 	for _, cookie := range cookies {
 		header.Add("Cookie", cookie.String())
 	}
-	wsURL := "ws" + ts.URL[len("http"):] + "/ws"
+	wsURL := "ws" + ts.URL[len("http"):] + "/api/room/connect?gameid=tictactoe"
 	ws, _, err := websocket.DefaultDialer.Dial(wsURL, header)
 	assert.NoError(t, err)
 	return ws

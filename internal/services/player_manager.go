@@ -21,6 +21,12 @@ func NewPlayerManager(store store.Store) *PlayerManager {
 	}
 }
 
+func (m *PlayerManager) SendToPlayer(playerID uuid.UUID, msg model.SendMessage) error {
+	ch := m.GetOrCreateChan(playerID)
+	ch <- msg
+	return nil
+}
+
 // получить канал для свази с игроком.
 func (m *PlayerManager) GetOrCreateChan(palyerID uuid.UUID) chan model.SendMessage {
 	m.chanLock.Lock()

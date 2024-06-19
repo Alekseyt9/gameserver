@@ -24,6 +24,7 @@ type RoomManager struct {
 type PlayerConnectResult struct {
 	State       string
 	ContentLink string
+	RoomID      *uuid.UUID
 }
 
 const (
@@ -118,6 +119,7 @@ func (m *RoomManager) PlayerConnect(
 		return &PlayerConnectResult{
 			State:       "game",
 			ContentLink: m.gameManager.GetGameInfo(gameID).ContentURL,
+			RoomID:      &room.ID,
 		}, nil
 	}
 

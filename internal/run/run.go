@@ -59,16 +59,18 @@ func Router(
 	log *slog.Logger) *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
-	services.NewWSManager(r, pm, rm, log)
+	ws := services.NewWSManager(r, pm, rm, log)
 	setupFileServer(r, cfg)
-	setupHandlers(r, s, rm, log)
+	setupHandlers(r, s, rm, pm, ws, log)
 	return r
 }
 
-func setupHandlers(r *gin.Engine, s store.Store, rm *services.RoomManager, log *slog.Logger) {
-	h := handlers.New(s, rm, log)
+func setupHandlers(
+	r *gin.Engine, s store.Store, rm *services.RoomManager,
+	pm *services.PlayerManager, ws *services.WebSocketManager, log *slog.Logger) {
+	h := handlers.New(s, rm, pm, ws, log)
 	r.POST("/api/player/register", h.RegisterPlayer)
-	r.POST("/api/room/connect", h.ConnectRoom)
+	r.GET("/api/room/connect", h.ConnectRoom)
 	r.POST("/api/room/quit", h.QuitRoom)
 }
 

@@ -18,35 +18,27 @@ func (h *Handler) ConnectRoom(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "PlayerID cookie not found"})
 		return
 	}
-
 	playerID, err := uuid.Parse(pID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "uuid.Parse(pID)"})
 		return
 	}
 
-	var req RoomRequest
-	if err = c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+	gameID := c.Query("gameid")
+	if gameID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing gameID parameter"})
 		return
 	}
 
 	var conRes *services.PlayerConnectResult
-	conRes, err = h.roomManager.PlayerConnect(c.Request.Context(), playerID, req.GameID)
+	conRes, err = h.roomManager.PlayerConnect(c.Request.Context(), playerID, gameID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "PlayerConnect"})
 		return
 	}
-
-	a := make(map[string]any, 0)
-	a["state"] = conRes.State
-	if conRes.State == "game" {
-		a["contentLink"] = conRes.ContentLink
-	}
-
 	h.log.Info("ConnectRoom", "playerID", playerID.String(), "result", conRes.State)
 
-	c.JSON(http.StatusOK, a)
+	h.wsManager.UpgradeToWebSocket(c, playerID)
 }
 
 func (h *Handler) QuitRoom(c *gin.Context) {

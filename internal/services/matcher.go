@@ -3,7 +3,6 @@ package services
 import (
 	"container/list"
 	"context"
-	"fmt"
 	"gameserver/internal/services/model"
 	"gameserver/internal/services/store"
 	"log/slog"
@@ -23,13 +22,13 @@ type Matcher struct {
 }
 
 type GameRoomGroup struct {
-	playersCount int
-	rooms        []*model.MatcherRoom
+	PlayersCount int
+	Rooms        []*model.MatcherRoom
 }
 
 type MatcherQueue struct {
-	list *list.List
-	lock sync.RWMutex
+	List *list.List
+	Lock sync.RWMutex
 }
 
 const (
@@ -39,7 +38,7 @@ const (
 func NewMatcher(store store.Store, pm *PlayerManager, gm *GameManager, log *slog.Logger) (*Matcher, error) {
 	m := &Matcher{
 		queue: &MatcherQueue{
-			list: list.New(),
+			List: list.New(),
 		},
 		store:         store,
 		playerManager: pm,
@@ -80,12 +79,12 @@ func (m *Matcher) loadWaitingRooms(ctx context.Context) error {
 		rg, ok := m.rooms[r.GameID]
 		if !ok {
 			rg = &GameRoomGroup{
-				playersCount: m.gameManager.GetGameInfo(r.GameID).PlayerCount,
-				rooms:        make([]*model.MatcherRoom, 0),
+				PlayersCount: m.gameManager.GetGameInfo(r.GameID).PlayerCount,
+				Rooms:        make([]*model.MatcherRoom, 0),
 			}
 			m.rooms[r.GameID] = rg
 		}
-		rg.rooms = append(rg.rooms, r)
+		rg.Rooms = append(rg.Rooms, r)
 	}
 
 	return nil
@@ -93,16 +92,16 @@ func (m *Matcher) loadWaitingRooms(ctx context.Context) error {
 
 // добавляет запрос на комнату, только если такого еще нет.
 func (m *Matcher) CheckAndAdd(q model.RoomQuery) bool {
-	m.queue.lock.Lock()
-	defer m.queue.lock.Unlock()
+	m.queue.Lock.Lock()
+	defer m.queue.Lock.Unlock()
 
-	for e := m.queue.list.Front(); e != nil; e = e.Next() {
+	for e := m.queue.List.Front(); e != nil; e = e.Next() {
 		if e.Value.(model.RoomQuery) == q {
 			return false
 		}
 	}
 
-	m.queue.list.PushBack(q)
+	m.queue.List.PushBack(q)
 
 	return true
 }
@@ -129,8 +128,8 @@ func (m *Matcher) doMatching(ctx context.Context) error {
 	// удаляем заполненные комнаты, сбрасываем состояние игроков.
 	for g, v := range m.rooms {
 		rs := make([]*model.MatcherRoom, 0)
-		for _, r := range v.rooms { // создаем список комнат в ожидании и оставляем только их.
-			if len(r.Players) < v.playersCount {
+		for _, r := range v.Rooms { // создаем список комнат в ожидании и оставляем только их.
+			if len(r.Players) < v.PlayersCount {
 				r.IsNew = false
 				r.StatusChanged = false
 				rs = append(rs, r)
@@ -139,7 +138,7 @@ func (m *Matcher) doMatching(ctx context.Context) error {
 				}
 			}
 		}
-		m.rooms[g].rooms = rs
+		m.rooms[g].Rooms = rs
 	}
 
 	// рассылаем сообщения о старте игры игрокам (всем игрокам комнат, котрые перешли в режим игры).
@@ -153,16 +152,16 @@ func (m *Matcher) processRooms(s []model.RoomQuery) ([]*model.MatcherRoom, error
 		rg, ok := m.rooms[l.GameID]
 		if !ok {
 			rg = &GameRoomGroup{
-				rooms:        make([]*model.MatcherRoom, 0),
-				playersCount: m.gameManager.GetGameInfo(l.GameID).PlayerCount,
+				Rooms:        make([]*model.MatcherRoom, 0),
+				PlayersCount: m.gameManager.GetGameInfo(l.GameID).PlayerCount,
 			}
 			m.rooms[l.GameID] = rg
 		}
 
 		// получаем первую комнату, которая не заполнена.
 		var wr *model.MatcherRoom
-		for _, r := range rg.rooms {
-			if len(r.Players) < rg.playersCount {
+		for _, r := range rg.Rooms {
+			if len(r.Players) < rg.PlayersCount {
 				wr = r
 				break
 			}
@@ -176,14 +175,14 @@ func (m *Matcher) processRooms(s []model.RoomQuery) ([]*model.MatcherRoom, error
 				Status:  "wait",
 				GameID:  l.GameID,
 			}
-			rg.rooms = append(rg.rooms, wr)
+			rg.Rooms = append(rg.Rooms, wr)
 		}
 
 		wr.Players = append(wr.Players, &model.MatcherPlayer{
 			PlayerID: l.PlayerID,
 			IsNew:    true,
 		})
-		if len(wr.Players) == rg.playersCount {
+		if len(wr.Players) == rg.PlayersCount {
 			wr.Status = "game"
 			wr.StatusChanged = true
 			err := m.initGame(wr)
@@ -196,7 +195,7 @@ func (m *Matcher) processRooms(s []model.RoomQuery) ([]*model.MatcherRoom, error
 	rooms := make([]*model.MatcherRoom, 0)
 
 	for _, v := range m.rooms {
-		rooms = append(rooms, v.rooms...)
+		rooms = append(rooms, v.Rooms...)
 	}
 
 	return rooms, nil
@@ -229,13 +228,14 @@ func (m *Matcher) getStartGameMessages() []model.SendMessage {
 
 	// только комнаты, которые изменили состояние и перешли в игру.
 	for _, g := range m.rooms {
-		for _, r := range g.rooms {
+		for _, r := range g.Rooms {
 			if r.StatusChanged {
 				for _, p := range r.Players {
-					res = append(res, model.SendMessage{
-						PlayerID: p.PlayerID,
-						Message:  createStartGameMsg(*r, *m.gameManager.GetGameInfo(r.GameID)),
-					})
+					res = append(res, model.NewSendMessage(
+						p.PlayerID,
+						&r.ID,
+						model.CreateStartGameMsg(m.gameManager.GetGameInfo(r.GameID).ContentURL),
+					))
 				}
 			}
 		}
@@ -244,28 +244,13 @@ func (m *Matcher) getStartGameMessages() []model.SendMessage {
 	return res
 }
 
-func createStartGameMsg(r model.MatcherRoom, gi model.GameInfo) string {
-	return fmt.Sprintf(`
-	{
-		"type": "room",
-		"game": "%s",
-		"data": {
-			"action": "start",
-			"data": {
-				"contentLink": "%s"
-			}			
-		}
-	}
-	`, r.GameID, gi.ContentURL)
-}
-
 // перемещаем из очереди все элементы в слайс, чтобы не блокировать очередь надолго, очередь очищается.
 func (m *Matcher) queueToSlice() []model.RoomQuery {
-	m.queue.lock.Lock()
-	defer m.queue.lock.Unlock()
+	m.queue.Lock.Lock()
+	defer m.queue.Lock.Unlock()
 
-	s := make([]model.RoomQuery, 0, m.queue.list.Len())
-	l := m.queue.list
+	s := make([]model.RoomQuery, 0, m.queue.List.Len())
+	l := m.queue.List
 
 	for e := l.Front(); e != nil; e = e.Next() {
 		s = append(s, e.Value.(model.RoomQuery))
