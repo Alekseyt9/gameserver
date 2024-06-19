@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Пошаговые игры</title>
+    <link rel="stylesheet" href="content/pico.min.css">
+    <!--<link rel="stylesheet" href="content/styles.css"> -->
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+    <style>
+        
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            padding: 2rem;
+            background-color: #fff;
+            color: #000;
+        }
+
+        main.container {
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h2, h3 {
+            color: #333;
+            text-align: center;
+        }
+
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .game-tile {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            transition: transform 0.3s;
+            text-align: center;
+        }
+
+        .game-tile img {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 1rem;
+            object-fit: cover;
+        }
+
+        .game-tile:hover {
+            transform: scale(1.05);
+        }
+
+        nav ul {
+            background-color: #f1f1f1;
+            justify-content: center;
+        }
+
+        nav ul li {
+            list-style: none;
+            margin: 0.5rem;
+        }
+
+        footer {
+            background-color: #f1f1f1;
+            text-align: center;
+        }
+
+        .welcome-image {
+            width: 100%;
+            max-width: 600px;
+            height: auto;
+            object-fit: contain;
+            margin: 1rem auto;
+        }
+
+        footer {
+            background-color: #f1f1f1;
+            padding: 1rem;
+            text-align: center;
+            border-top: 1px solid #ccc;
+        }
+
+        footer a {
+            text-decoration: none;
+            color: #007bff;
+            margin: 0 0.5rem;
+            font-weight: bold;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* modal window */
+
+        body.modal-open {
+            overflow: hidden;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            position: relative;
+            width: 95%;
+            height: 95%;
+            background: white;
+            border: 2px solid #ccc;
+        }
+
+        .modal-content iframe {
+            width: 100%;
+            height: 100%;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: calc(2.5% - 20px); 
+            right: calc(2.5% - 10px);
+            font-size: 40px;
+            font-style: oblique;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            background-size: contain;
+            z-index: 1010;
+            /*background-color: gray;*/
+            color: rgb(255, 255, 255)
+        }
+    </style>
+</head>
+
+<body>
+
+    <main class="container">
+        <div class="grid">
+            <section>
+                <hgroup>
+                    <h2>Популярные игры</h2>
+                    <h3>Выбирайте игру и играйте с другими игроками</h3>
+                </hgroup>
+                <div class="game-grid">
+                    <div class="game-tile">
+                        <img src="content/row-2-column-1.webp" alt="Крестики-нолики" loading="lazy"/>
+                        <figcaption><a target="_blank">Крестики-нолики</a></figcaption>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div class="modal" id="modal">
+            <div class="modal-content">
+                <iframe id="game-iframe"></iframe>
+            </div>
+            <span class="close-btn" id="close-btn">&times;</span>
+        </div>
+
+        <div class="grid">
+            <section>
+                <hgroup>
+                    <h2>Добро пожаловать на сайт пошаговых игр!</h2>
+                    <h3>Играйте в разнообразные игры с другими игроками</h3>
+                </hgroup>
+                <p>Наш сайт предлагает вам разнообразие пошаговых игр, которые вы можете играть с другими игроками. Начните с выбора одной из доступных игр выше.</p>
+                <figure>
+                    <img class="welcome-image" src="content/img01.webp" alt="Игровое изображение" loading="lazy"/>
+                </figure>
+            </section>
+        </div>
+    </main>
+
+    <!-- Скрытый элемент для WebSocket URL -->
+    <div id="ws-url" style="display: none;">{{.WebSocketURL}}</div>
+
+    <script>
+        document.querySelector('.game-tile').addEventListener('click', function() {
+            document.getElementById('modal').style.display = 'flex';
+            document.body.classList.add('modal-open');
+            document.getElementById('game-iframe').src = 'content/matching/index.html';
+        });
+
+        document.getElementById('close-btn').addEventListener('click', function() {
+            document.getElementById('modal').style.display = 'none';
+            document.body.classList.remove('modal-open');
+        });
+
+        class GameManager {
+            constructor(wsm, url){
+                this.wsm = wsm;
+                this.url = url;
+            }
+
+            async Register() {
+                try {
+                    const response = await fetch("http://"+this.url+'/api/player/register', {
+                        method: 'POST',
+                        credentials: 'include'
+                    });
+
+                    if (response.ok) {
+                        console.log('Player registered successfully');
+                    } else {
+                        const errorBody = await response.text(); 
+                        console.error('Failed to register player:', errorBody);
+                    }
+                } catch (error) {
+                    console.error('Error during registration:', error);
+                }
+            }
+
+            /*
+            async Connect(gameID) {
+                try {
+                    const response = await fetch("http://"+this.url+'/api/room/connect', {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            gameID: gameID
+                        })
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('Player connect successfully', data);
+                        return data; 
+                    } else {
+                        const errorText = await response.text();
+                        console.error('Failed to connect player:', errorText);
+                        throw new Error(errorText);
+                    }
+                } catch (error) {
+                    console.error('Error during connection:', error);
+                }
+            }
+            */
+
+            async Quit(gameID) {
+                try {
+                    const response = await fetch("http://"+this.url+'/api/room/quit', {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            gameID: gameID
+                        })
+                    });
+
+                    if (response.ok) {
+                        console.log('Quit room successfully');
+                    } else {
+                        console.error('Failed to quit room');
+                    }
+                } catch (error) {
+                    console.error('Error during quit:', error);
+                }
+            }
+
+            SetContent(url) {
+                document.getElementById('game-iframe').src = url;
+            }
+        }
+
+        class WebSocketManager {
+            constructor(url) {
+                this.url = url;
+                this.websocket = null;
+                this.eventHandlers = {
+                    onopen: [],
+                    onmessage: [],
+                    onclose: []
+                };
+            }
+
+            getConnection() {
+                return this.websocket;
+            }
+
+            connect(gameID) {
+                this.disconnect();
+                if (!this.websocket || this.websocket.readyState === WebSocket.CLOSED) {
+                    this.websocket = new WebSocket(this.url+"?gameid="+gameID);
+
+                    this.websocket.onopen = (event) => {
+                        this.eventHandlers.onopen.forEach(handler => handler(event));
+                    };
+
+                    this.websocket.onmessage = (event) => {
+                        this.eventHandlers.onmessage.forEach(handler => handler(event));
+                    };
+
+                    this.websocket.onclose = (event) => {
+                        this.eventHandlers.onclose.forEach(handler => handler(event));
+                    };
+                }
+                return this.websocket;
+            }
+
+            disconnect(){
+                if (this.websocket) {
+                    this.websocket.close();
+                    this.websocket = null;
+                }
+            }
+
+            subscribe(event, handler) {
+                if (this.eventHandlers[event]) {
+                    this.eventHandlers[event].push(handler);
+                } else {
+                    console.warn(`Event ${event} is not supported.`);
+                }
+            }
+        }
+
+        const wsUrlElement = document.getElementById("ws-url");
+        const wsUrl = wsUrlElement ? "ws://" + wsUrlElement.textContent + "/api/room/connect": "ws://default-url";
+
+        const wsm = new WebSocketManager(wsUrl);
+        const gm = new GameManager(wsm, wsUrlElement.textContent)
+        window.gm = gm;
+
+        gm.Register()
+            .catch(error => {
+                console.error('An error occurred:', error);
+            });
+
+    </script>
+
+</body>
+
+</html>
