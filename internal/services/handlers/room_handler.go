@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"gameserver/internal/services"
+	"gameserver/internal/services/model"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -37,6 +38,15 @@ func (h *Handler) ConnectRoom(c *gin.Context) {
 		return
 	}
 	h.log.Info("ConnectRoom", "playerID", playerID.String(), "result", conRes.State)
+
+	if conRes.State == "game" {
+		err = h.playerManager.SendToPlayer(playerID,
+			model.NewSendMessage(playerID, conRes.RoomID, model.CreateStartGameMsg(conRes.ContentLink)))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "SendToPlayer"})
+			return
+		}
+	}
 
 	h.wsManager.UpgradeToWebSocket(c, playerID)
 }

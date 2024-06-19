@@ -227,6 +227,7 @@
                 }
             }
 
+            /*
             async Connect(gameID) {
                 try {
                     const response = await fetch("http://"+this.url+'/api/room/connect', {
@@ -253,6 +254,7 @@
                     console.error('Error during connection:', error);
                 }
             }
+            */
 
             async Quit(gameID) {
                 try {
@@ -294,8 +296,13 @@
             }
 
             getConnection() {
+                return this.websocket;
+            }
+
+            connect(gameID) {
+                this.disconnect();
                 if (!this.websocket || this.websocket.readyState === WebSocket.CLOSED) {
-                    this.websocket = new WebSocket(this.url);
+                    this.websocket = new WebSocket(this.url+"?gameid="+gameID);
 
                     this.websocket.onopen = (event) => {
                         this.eventHandlers.onopen.forEach(handler => handler(event));
@@ -312,6 +319,13 @@
                 return this.websocket;
             }
 
+            disconnect(){
+                if (this.websocket) {
+                    this.websocket.close();
+                    this.websocket = null;
+                }
+            }
+
             subscribe(event, handler) {
                 if (this.eventHandlers[event]) {
                     this.eventHandlers[event].push(handler);
@@ -322,30 +336,16 @@
         }
 
         const wsUrlElement = document.getElementById("ws-url");
-        const wsUrl = wsUrlElement ? "ws://" + wsUrlElement.textContent + "/ws": "ws://default-url";
+        const wsUrl = wsUrlElement ? "ws://" + wsUrlElement.textContent + "/api/room/connect": "ws://default-url";
 
         const wsm = new WebSocketManager(wsUrl);
         const gm = new GameManager(wsm, wsUrlElement.textContent)
         window.gm = gm;
 
-        gm.Register().then(() => {
-            const ws = wsm.getConnection();
-
-            wsm.subscribe('onopen', (event) => {
-                console.log("Connection opened");
+        gm.Register()
+            .catch(error => {
+                console.error('An error occurred:', error);
             });
-
-            wsm.subscribe('onmessage', (event) => {
-                console.log("Received: " + event.data);
-            });
-
-            wsm.subscribe('onclose', (event) => {
-                console.log("Connection closed");
-            });
-        })
-        .catch(error => {
-            console.error('An error occurred:', error);
-        });
 
     </script>
 

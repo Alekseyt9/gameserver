@@ -14,7 +14,9 @@ type Handler struct {
 	playerManager *services.PlayerManager
 }
 
-func New(store store.Store, rm *services.RoomManager, pm *services.PlayerManager, ws *services.WebSocketManager, log *slog.Logger) *Handler {
+func New(
+	store store.Store, rm *services.RoomManager, pm *services.PlayerManager,
+	ws *services.WebSocketManager, log *slog.Logger) *Handler {
 	return &Handler{
 		store:         store,
 		roomManager:   rm,

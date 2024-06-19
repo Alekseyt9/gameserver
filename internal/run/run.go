@@ -59,7 +59,7 @@ func Router(
 	log *slog.Logger) *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
-	ws := services.NewWSManager(r, pm, rm, log)
+	ws := services.NewWSManager(pm, rm, log)
 	setupFileServer(r, cfg)
 	setupHandlers(r, s, rm, pm, ws, log)
 	return r

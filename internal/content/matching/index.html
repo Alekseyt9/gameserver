@@ -28,22 +28,9 @@
 
     <script>
         const gm = window.parent.gm;
-        gm.Connect("tictactoe")
-            .then((x) => { 
-                console.log(x);
-                if (x.state == "game"){
-                    gm.SetContent(x.contentLink);
-                }
-            })
-            .catch(error => {
-                console.error('An error occurred:', error);
-            }
-        );
-
-		const ws = gm.wsm.getConnection();
+		const ws = gm.wsm.connect("tictactoe");
 
 		gm.wsm.subscribe('onmessage', (event) => {
-			//console.log("Received: " + event.data);
 			try {
 				const data = JSON.parse(event.data);
                 if (data.type == "room" && data.data.action == "start"){

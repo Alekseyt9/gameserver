@@ -4,6 +4,7 @@ package game
 
 import (
 	json "encoding/json"
+
 	uuid "github.com/google/uuid"
 	easyjson "github.com/mailru/easyjson"
 	jlexer "github.com/mailru/easyjson/jlexer"
