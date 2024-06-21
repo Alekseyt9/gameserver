@@ -114,13 +114,20 @@ func (m *RoomManager) PlayerConnect(
 		return nil, err
 	}
 
-	if room != nil && room.Status == "game" {
-		// комната в игре есть - стартуем игру.
-		return &PlayerConnectResult{
-			State:       "game",
-			ContentLink: m.gameManager.GetGameInfo(gameID).ContentURL,
-			RoomID:      &room.ID,
-		}, nil
+	if room != nil {
+		switch room.Status {
+		case "game": // комната в игре есть - стартуем игру.
+			return &PlayerConnectResult{
+				State:       "game",
+				ContentLink: m.gameManager.GetGameInfo(gameID).ContentURL,
+				RoomID:      &room.ID,
+			}, nil
+		case "wait": // комната есть, но игрок ожидает игры
+			return &PlayerConnectResult{
+				State:  "wait",
+				RoomID: &room.ID,
+			}, nil
+		}
 	}
 
 	// ставим в очередь в матчмейкинг.

@@ -227,35 +227,6 @@
                 }
             }
 
-            /*
-            async Connect(gameID) {
-                try {
-                    const response = await fetch("http://"+this.url+'/api/room/connect', {
-                        method: 'POST',
-                        credentials: 'include',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            gameID: gameID
-                        })
-                    });
-
-                    if (response.ok) {
-                        const data = await response.json();
-                        console.log('Player connect successfully', data);
-                        return data; 
-                    } else {
-                        const errorText = await response.text();
-                        console.error('Failed to connect player:', errorText);
-                        throw new Error(errorText);
-                    }
-                } catch (error) {
-                    console.error('Error during connection:', error);
-                }
-            }
-            */
-
             async Quit(gameID) {
                 try {
                     const response = await fetch("http://"+this.url+'/api/room/quit', {
