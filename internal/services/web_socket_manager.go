@@ -58,7 +58,7 @@ func (m *WebSocketManager) handleConnect(s *melody.Session) {
 
 			err = s.Write([]byte(msg.Message))
 			if err != nil {
-				m.log.Error("failed to write message", err)
+				m.log.Error("failed to write message", "error", err)
 			}
 		}
 	}()
@@ -106,7 +106,7 @@ func (m *WebSocketManager) handleMessage(s *melody.Session, data []byte) {
 
 	msg, err := createGameMsg(data, playerID)
 	if err != nil {
-		m.log.Error("Ошибка создания GameMsg", err)
+		m.log.Error("Ошибка создания GameMsg", "error", err)
 	}
 
 	ch := m.roomManager.GetOrCreateChan(roomID)

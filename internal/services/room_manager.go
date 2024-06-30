@@ -57,12 +57,12 @@ func (m *RoomManager) GetOrCreateChan(roomID uuid.UUID) chan model.GameMsg {
 			for msg := range ch {
 				gctx, err := m.gameManager.Process(ctx, &msg)
 				if err != nil {
-					m.log.Error("m.gameManager.Process error", err)
+					m.log.Error("m.gameManager.Process error", "error", err)
 				}
 
 				err = m.processResult(gctx)
 				if err != nil {
-					m.log.Error("m.processResult error", err)
+					m.log.Error("m.processResult error", "error", err)
 				}
 			}
 		}()

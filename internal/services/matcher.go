@@ -58,7 +58,7 @@ func NewMatcher(store store.Store, pm *PlayerManager, gm *GameManager, log *slog
 		for {
 			err = m.doMatching(ctx)
 			if err != nil {
-				m.log.Error("m.doMatching error", err)
+				m.log.Error("m.doMatching error", "error", err)
 			}
 			time.Sleep(time.Microsecond * taskInterval)
 		}
