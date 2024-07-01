@@ -2,13 +2,6 @@ package model
 
 import "github.com/google/uuid"
 
-// общая информация об игре.
-type GameInfo struct {
-	PlayerCount int    // количество игроков в игре.
-	ContentURL  string // ссылка на index.html игры.
-	TurnTimeout int    // ограничение времени на ход.
-}
-
 type GameMsg struct {
 	Type     string
 	GameID   string
@@ -39,12 +32,21 @@ func NewSendMessage(playerID uuid.UUID, roomID *uuid.UUID, msg string) SendMessa
 	}
 }
 
+// общий интерфейс для обработчиков игр.
 type GameProcessor interface {
 	GetInfo() *GameInfo
 	Init(players []uuid.UUID) (string, error)
 	Process(ctx ProcessorCtx, state string, msg *GameMsg) error
 }
 
+// информация о конкретной игре.
+type GameInfo struct {
+	PlayerCount int    // количество игроков в игре.
+	ContentURL  string // ссылка на index.html игры.
+	TurnTimeout int    // ограничение времени на ход.
+}
+
+// контейнер для измененного состояния игры и новых сообщений для игроков.
 type ProcessorCtx interface {
 	SetState(s string)
 	AddSendMessage(msg SendMessage)
